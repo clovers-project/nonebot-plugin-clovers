@@ -48,7 +48,7 @@ driver.on_startup(adapter.startup)
 from nonebot import on_message
 from nonebot.matcher import Matcher
 
-main = on_message(priority=50, block=True)
+main = on_message(priority=50, block=False)
 
 
 def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
