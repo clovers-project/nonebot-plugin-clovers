@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "nonebot-plugin-clovers"
+version = "0.1.0"
+description = ""
+authors = ["KarisAya <1048827424@qq.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+nonebot2 = "^2.2.1"
+nonebot-adapter-onebot = "^2.4.3"
+nonebot-adapter-qq = "^1.4.3"
+clovers = "^0.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

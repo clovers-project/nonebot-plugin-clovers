@@ -1,6 +1,3 @@
-import sys
-
-sys.path.append(r"D:\GIT\clovers_core")
 from io import BytesIO
 from collections.abc import Callable, Coroutine, AsyncGenerator
 from clovers.core.adapter import AdapterMethod
