@@ -13,13 +13,13 @@ files = [
 
 [[package]]
 name = "clovers"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 optional = false
-python-versions = "<4.0,>=3.12"
+python-versions = "<4.0,>=3.10"
 files = [
-    {file = "clovers-0.1.1-py3-none-any.whl", hash = "sha256:a9cdfbedea1e2bc32af648f5ffcca1ff34f7b635d6607cccf454c1e4353d2257"},
-    {file = "clovers-0.1.1.tar.gz", hash = "sha256:650ccaf1ea547eff4491d7a0e0310fc1bb408c2d49176789aecd821f1c12e0aa"},
+    {file = "clovers-0.1.2-py3-none-any.whl", hash = "sha256:87ee3371e8656a3c7bc87b75ef0100c53f48348582cd9a93e3b20de2a0d7fe06"},
+    {file = "clovers-0.1.2.tar.gz", hash = "sha256:29311cbb16a529e8b40ed52b3119b82f5be1c2e72b27bb373cdbf6a319031e2c"},
 ]
 
 [package.dependencies]
@@ -283,6 +283,7 @@ loguru = ">=0.6.0,<1.0.0"
 pydantic = ">=1.10.0,<2.5.0 || >2.5.0,<2.5.1 || >2.5.1,<3.0.0"
 pygtrie = ">=2.4.1,<3.0.0"
 python-dotenv = ">=0.21.0,<2.0.0"
+tomli = {version = ">=2.0.1,<3.0.0", markers = "python_version < \"3.11\""}
 typing-extensions = ">=4.4.0,<5.0.0"
 yarl = ">=1.7.2,<2.0.0"
 
@@ -441,6 +442,17 @@ files = [
 ]
 
 [[package]]
+name = "tomli"
+version = "2.0.1"
+description = "A lil' TOML parser"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
+    {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.11.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -570,5 +582,5 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.12"
-content-hash = "8416d02d30183cb8b182137ba3b86b12ceb3d4aef1757d736d5af3b4f2d8db65"
+python-versions = "^3.10"
+content-hash = "611521b8b639187fc1e803c6cb792c412ff143aefd8998f80f0eef75b306ce2d"

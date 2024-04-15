@@ -5,6 +5,15 @@ from nonebot import get_driver
 from clovers.core.adapter import AdapterMethod
 from clovers.core.plugin import PluginLoader
 from .adapters.main import extract_command, new_adapter
+from nonebot.plugin import PluginMetadata
+
+__plugin_meta__ = PluginMetadata(
+    name="clovers插件框架",
+    description="NoneBot clovers框架",
+    usage="None",
+    type="library",
+    homepage="https://github.com/KarisAya/nonebot_plugin_clovers",
+)
 
 # 加载配置
 driver = get_driver()
