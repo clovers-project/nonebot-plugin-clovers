@@ -1,54 +1,53 @@
 import os
 from pathlib import Path
-from pydantic import BaseModel
-from nonebot import get_driver
+from nonebot import get_driver, get_plugin_config, on_message
+from nonebot.matcher import Matcher
+from nonebot.plugin import PluginMetadata
 from clovers.core.adapter import AdapterMethod
 from clovers.core.plugin import PluginLoader
 from .adapters.main import extract_command, new_adapter
-from nonebot.plugin import PluginMetadata
+from .config import Config, ConfigClovers
 
 __plugin_meta__ = PluginMetadata(
     name="clovers插件框架",
     description="NoneBot clovers框架",
-    usage="None",
-    type="library",
+    usage="加载即用",
+    type="application",
     homepage="https://github.com/KarisAya/nonebot_plugin_clovers",
+    config=Config,
+    supported_adapters={
+        "nonebot.adapters.qq",
+        "nonebot.adapters.onebot.v11",
+    },
 )
 
 # 加载配置
-driver = get_driver()
-global_config = driver.config
-clovers_config_file = getattr(global_config, "clovers_config_file", "clovers.toml")
+config_data = get_plugin_config(Config)
+
+clovers_config_file = config_data.clovers_config_file
+clovers_priority = config_data.clovers_priority
+
 os.environ["clovers_config_file"] = clovers_config_file
 
 # 添加环境变量之后加载config
+
 from clovers.core.config import config as clovers_config
 
-
-# 加载clovers配置
-class Config(BaseModel):
-    plugins_path: str = "./clovers_library"
-    plugins_list: list = []
-
-
 config_key = __package__
-config = Config.parse_obj(clovers_config.get(config_key, {}))
-clovers_config[config_key] = config.dict()
+clovers_config_data = ConfigClovers.model_validate(clovers_config.get(config_key, {}))
+clovers_config[config_key] = clovers_config_data.model_dump()
 clovers_config.save()
 
 
-plugins_path = Path(config.plugins_path)
+plugins_path = Path(clovers_config_data.plugins_path)
 plugins_path.mkdir(exist_ok=True, parents=True)
 
-loader = PluginLoader(plugins_path, config.plugins_list)
+loader = PluginLoader(plugins_path, clovers_config_data.plugins_list)
 adapter = new_adapter(loader.plugins)
 
-driver.on_startup(adapter.startup)
+get_driver().on_startup(adapter.startup)
 
-from nonebot import on_message
-from nonebot.matcher import Matcher
-
-main = on_message(priority=50, block=False)
+main = on_message(priority=clovers_priority, block=False)
 
 
 def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
