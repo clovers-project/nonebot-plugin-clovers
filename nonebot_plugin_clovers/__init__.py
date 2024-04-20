@@ -51,6 +51,7 @@ main = on_message(priority=clovers_priority, block=False)
 
 
 def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
+    print(f"加载适配器：{adapter_key}")
     adapter.methods[adapter_key] = adapter_method
 
     @main.handle()
@@ -60,13 +61,18 @@ def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
             matcher.stop_propagation()
 
 
-from .adapters import qq
-from nonebot.adapters.qq import Bot as QQBot, MessageEvent as QQMsgEvent
-
-add_response(QQBot, QQMsgEvent, qq.initializer(main), "QQ")
+using_adapters = config_data.using_adapters
 
 
-from .adapters import v11
-from nonebot.adapters.onebot.v11 import Bot as v11Bot, MessageEvent as v11MsgEvent
+if "nonebot.adapters.qq" in using_adapters:
+    from .adapters import qq
+    from nonebot.adapters.qq import Bot, MessageEvent
 
-add_response(v11Bot, v11MsgEvent, v11.initializer(main), "v11")
+    add_response(Bot, MessageEvent, qq.initializer(main), "QQ")
+
+if "nonebot.adapters.onebot.v11" in using_adapters:
+
+    from .adapters.onebot import v11
+    from nonebot.adapters.onebot.v11 import Bot, MessageEvent
+
+    add_response(Bot, MessageEvent, v11.initializer(main), "onebot.v11".upper())

@@ -7,6 +7,7 @@ from nonebot.adapters.qq import MessageEvent, Message, MessageSegment
 
 
 def initializer(main: type[Matcher]) -> AdapterMethod:
+
     method = AdapterMethod()
 
     @method.send("text")
