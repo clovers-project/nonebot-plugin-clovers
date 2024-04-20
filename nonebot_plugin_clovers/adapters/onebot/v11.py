@@ -109,8 +109,9 @@ def initializer(main: type[Matcher]) -> AdapterMethod:
         async def group_member_list():
             info_list = await bot.get_group_member_list(group_id=event.group_id)
             for user_info in info_list:
-                user_info["user_id"] = str(user_info["user_id"])
-                user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_info['user_id']}&s=640"
+                user_id = str(user_info["user_id"])
+                user_info["user_id"] = user_id
+                user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
             return info_list
 
         return group_member_list
