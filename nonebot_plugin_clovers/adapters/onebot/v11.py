@@ -105,18 +105,14 @@ def initializer(main: type[Matcher]) -> AdapterMethod:
         return send_group_message
 
     @method.kwarg("group_member_list")
-    async def _(bot: Bot, event: MessageEvent) -> Callable[[], Coroutine] | None:
+    async def _(bot: Bot, event: MessageEvent) -> None | list[dict]:
         if not isinstance(event, GroupMessageEvent):
             return None
-
-        async def group_member_list():
-            info_list = await bot.get_group_member_list(group_id=event.group_id)
-            for user_info in info_list:
-                user_id = str(user_info["user_id"])
-                user_info["user_id"] = user_id
-                user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
-            return info_list
-
-        return group_member_list
+        info_list = await bot.get_group_member_list(group_id=event.group_id)
+        for user_info in info_list:
+            user_id = str(user_info["user_id"])
+            user_info["user_id"] = user_id
+            user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
+        return info_list
 
     return method
