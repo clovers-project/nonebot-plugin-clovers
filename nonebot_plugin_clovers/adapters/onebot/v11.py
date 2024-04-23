@@ -30,13 +30,16 @@ def initializer(main: type[Matcher]) -> AdapterMethod:
 
     @method.send("list")
     async def _(message: list[Result], send: Callable[..., Coroutine] = main.send):
-        """发送图片文本混合信息"""
+        """发送图片文本混合信息，@信息在此发送"""
         msg = Message()
         for seg in message:
-            if seg.send_method == "text":
-                msg += seg.data
-            elif seg.send_method == "image":
-                msg += MessageSegment.image(seg.data)
+            match seg.send_method:
+                case "text":
+                    msg += seg.data
+                case "image":
+                    msg += MessageSegment.image(seg.data)
+                case "at":
+                    msg += MessageSegment.at(seg.data)
         await send(msg)
 
     @method.send("segmented")
