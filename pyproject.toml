@@ -7,10 +7,11 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-clovers = "^0.1.4"
 nonebot2 = "^2.2.1"
+clovers = "^0.1.4.post1"
 nonebot-adapter-onebot = {version = "^2.4.3", optional = true}
 nonebot-adapter-qq = {version = "^1.4.3", optional = true}
+
 
 [tool.poetry.extras]
 onebot = ["nonebot-adapter-onebot",]
