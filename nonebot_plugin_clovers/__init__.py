@@ -52,7 +52,7 @@ main = on_message(priority=clovers_priority, block=False)
 
 def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
     print(f"加载适配器：{adapter_key}")
-    adapter.methods[adapter_key] = adapter_method
+    adapter.method_dict[adapter_key] = adapter_method
 
     @main.handle()
     async def _(matcher: Matcher, bot: Bot, event: Event):

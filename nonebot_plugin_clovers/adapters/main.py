@@ -26,7 +26,7 @@ def new_adapter(plugins: list[Plugin] | None = None):
     if plugins:
         adapter.plugins = plugins
 
-    @adapter.method.kwarg("Bot_Nickname")
+    @adapter.global_method.kwarg("Bot_Nickname")
     async def _():
         return Bot_NICKNAME
 
