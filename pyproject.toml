@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 nonebot2 = "^2.2.1"
+pydantic = "^2.7.1"
 clovers = "^0.1.5"
 nonebot-adapter-onebot = {version = "^2.4.3", optional = true}
 nonebot-adapter-qq = {version = "^1.4.3", optional = true}
