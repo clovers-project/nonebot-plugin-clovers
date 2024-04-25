@@ -3,6 +3,8 @@ from pathlib import Path
 from nonebot import get_driver, get_plugin_config, on_message
 from nonebot.matcher import Matcher
 from nonebot.plugin import PluginMetadata
+from nonebot.log import LoguruHandler, logger
+from clovers.core.logger import logger as clovers_logger
 from clovers.core.adapter import AdapterMethod
 from clovers.core.plugin import PluginLoader
 from .adapters.main import extract_command, new_adapter
@@ -20,6 +22,8 @@ __plugin_meta__ = PluginMetadata(
         "nonebot.adapters.onebot.v11",
     },
 )
+
+clovers_logger.addHandler(LoguruHandler())
 
 # 加载配置
 config_data = get_plugin_config(Config)
@@ -51,7 +55,7 @@ main = on_message(priority=clovers_priority, block=False)
 
 
 def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
-    print(f"加载适配器：{adapter_key}")
+    logger.info(f"加载适配器：{adapter_key}")
     adapter.method_dict[adapter_key] = adapter_method
 
     @main.handle()
