@@ -5,7 +5,7 @@ from nonebot.matcher import Matcher
 from nonebot.plugin import PluginMetadata
 from nonebot.log import LoguruHandler, logger
 from clovers.core.logger import logger as clovers_logger
-from clovers.core.adapter import AdapterMethod
+from clovers.core.adapter import Adapter
 from clovers.core.plugin import PluginLoader
 from .adapters.main import extract_command, new_clovers
 from .config import Config, ConfigClovers
@@ -55,9 +55,9 @@ driver.on_startup(clovers.startup)
 main = on_message(priority=clovers_priority, block=False)
 
 
-def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
+def add_response(Bot, Event, adapter_method: Adapter, adapter_key: str):
     logger.info(f"加载适配器：{adapter_key}")
-    clovers.method_dict[adapter_key] = adapter_method
+    clovers.adapter_dict[adapter_key] = adapter_method
 
     @main.handle()
     async def _(matcher: Matcher, bot: Bot, event: Event):
