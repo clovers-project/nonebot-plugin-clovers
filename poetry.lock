@@ -12,6 +12,24 @@ files = [
 ]
 
 [[package]]
+name = "clovers"
+version = "0.1.5"
+description = ""
+optional = false
+python-versions = "<4.0,>=3.10"
+files = [
+    {file = "clovers-0.1.5-py3-none-any.whl", hash = "sha256:59f24e620a394bc596fcd56aa107129e4e85ab08db605bfc6157d8ddee814732"},
+    {file = "clovers-0.1.5.tar.gz", hash = "sha256:ae39370d92c090acdaf12c14649178b09abf2fdd46c7372af2fa69d0d37e3938"},
+]
+
+[package.dependencies]
+toml = ">=0.10.2,<0.11.0"
+
+[package.extras]
+linecard = ["fonttools (>=4.51.0,<5.0.0)", "matplotlib (>=3.8.4,<4.0.0)", "pillow (>=10.3.0,<11.0.0)"]
+tools = ["httpx (>=0.27.0,<0.28.0)", "numpy (>=1.26.4,<2.0.0)"]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -413,6 +431,17 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "toml"
+version = "0.10.2"
+description = "Python Library for Tom's Obvious, Minimal Language"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
+    {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -558,4 +587,4 @@ qq = ["nonebot-adapter-qq"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ac91fbb63a26dd42ca7977ed1a148c2048c700e05a146913dd7fa8a1b44f22d1"
+content-hash = "48e62895766bdee100fd866d4dd833c31932bdc12f5b54e5dc9ba7d69515917c"

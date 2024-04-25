@@ -48,6 +48,7 @@ plugins_path = Path(clovers_config_data.plugins_path)
 plugins_path.mkdir(exist_ok=True, parents=True)
 
 loader = PluginLoader(plugins_path, clovers_config_data.plugins_list)
+
 clovers = new_clovers(loader.plugins)
 
 driver.on_startup(clovers.startup)
@@ -55,9 +56,9 @@ driver.on_startup(clovers.startup)
 main = on_message(priority=clovers_priority, block=False)
 
 
-def add_response(Bot, Event, adapter_method: Adapter, adapter_key: str):
+def add_response(Bot, Event, adapter: Adapter, adapter_key: str):
     logger.info(f"加载适配器：{adapter_key}")
-    clovers.adapter_dict[adapter_key] = adapter_method
+    clovers.adapter_dict[adapter_key] = adapter
 
     @main.handle()
     async def _(matcher: Matcher, bot: Bot, event: Event):
