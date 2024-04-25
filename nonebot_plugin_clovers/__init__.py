@@ -71,14 +71,23 @@ using_adapters = config_data.using_adapters
 
 
 if "nonebot.adapters.qq" in using_adapters:
-    from .adapters import qq
-    from nonebot.adapters.qq import Bot, MessageEvent
-
-    add_response(Bot, MessageEvent, qq.initializer(main), "QQ")
+    flag = True
+    try:
+        from .adapters import qq
+        from nonebot.adapters.qq import Bot, MessageEvent
+    except ModuleNotFoundError:
+        logger.error("nonebot.adapters.qq 加载失败")
+        flag = False
+    if flag:
+        add_response(Bot, MessageEvent, qq.initializer(main), "QQ")
 
 if "nonebot.adapters.onebot.v11" in using_adapters:
-
-    from .adapters.onebot import v11
-    from nonebot.adapters.onebot.v11 import Bot, MessageEvent
-
-    add_response(Bot, MessageEvent, v11.initializer(main), "onebot.v11".upper())
+    flag = True
+    try:
+        from .adapters.onebot import v11
+        from nonebot.adapters.onebot.v11 import Bot, MessageEvent
+    except ModuleNotFoundError:
+        flag = False
+        logger.error("nonebot.adapters.onebot.v11 加载失败")
+    if flag:
+        add_response(Bot, MessageEvent, v11.initializer(main), "onebot.v11".upper())
