@@ -1,6 +1,6 @@
 from nonebot import get_driver
 from clovers.core.plugin import Plugin
-from clovers.core.adapter import Adapter
+from clovers import Clovers
 
 # 加载配置
 driver = get_driver()
@@ -20,14 +20,14 @@ Bot_NICKNAME = list(global_config.nickname)
 Bot_NICKNAME = Bot_NICKNAME[0] if Bot_NICKNAME else "bot"
 
 
-def new_adapter(plugins: list[Plugin] | None = None):
-    """创建新的adapter，包括注入插件和全局方法"""
-    adapter = Adapter()
+def new_clovers(plugins: list[Plugin] | None = None):
+    """创建新的Clovers实例，包括注入插件和全局方法"""
+    clovers = Clovers()
     if plugins:
-        adapter.plugins = plugins
+        clovers.plugins = plugins
 
-    @adapter.global_method.kwarg("Bot_Nickname")
+    @clovers.global_adapter.kwarg("Bot_Nickname")
     async def _():
         return Bot_NICKNAME
 
-    return adapter
+    return clovers

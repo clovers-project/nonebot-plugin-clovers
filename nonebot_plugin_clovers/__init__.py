@@ -7,7 +7,7 @@ from nonebot.log import LoguruHandler, logger
 from clovers.core.logger import logger as clovers_logger
 from clovers.core.adapter import AdapterMethod
 from clovers.core.plugin import PluginLoader
-from .adapters.main import extract_command, new_adapter
+from .adapters.main import extract_command, new_clovers
 from .config import Config, ConfigClovers
 
 __plugin_meta__ = PluginMetadata(
@@ -23,10 +23,12 @@ __plugin_meta__ = PluginMetadata(
     },
 )
 driver = get_driver()
-driver.config.log_level
-config_data = get_plugin_config(Config)
+# 配置日志记录器
+log_level = driver.config.log_level
+clovers_logger.setLevel(log_level)
+clovers_logger.addHandler(LoguruHandler(log_level))
 # 加载配置
-clovers_logger.addHandler(LoguruHandler(driver.config.log_level))
+config_data = get_plugin_config(Config)
 clovers_config_file = config_data.clovers_config_file
 clovers_priority = config_data.clovers_priority
 
@@ -46,21 +48,21 @@ plugins_path = Path(clovers_config_data.plugins_path)
 plugins_path.mkdir(exist_ok=True, parents=True)
 
 loader = PluginLoader(plugins_path, clovers_config_data.plugins_list)
-adapter = new_adapter(loader.plugins)
+clovers = new_clovers(loader.plugins)
 
-driver.on_startup(adapter.startup)
+driver.on_startup(clovers.startup)
 
 main = on_message(priority=clovers_priority, block=False)
 
 
 def add_response(Bot, Event, adapter_method: AdapterMethod, adapter_key: str):
     logger.info(f"加载适配器：{adapter_key}")
-    adapter.method_dict[adapter_key] = adapter_method
+    clovers.method_dict[adapter_key] = adapter_method
 
     @main.handle()
     async def _(matcher: Matcher, bot: Bot, event: Event):
         command = extract_command(event.get_plaintext())
-        if await adapter.response(adapter_key, command, bot=bot, event=event):
+        if await clovers.response(adapter_key, command, bot=bot, event=event):
             matcher.stop_propagation()
 
 
