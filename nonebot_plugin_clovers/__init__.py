@@ -22,12 +22,11 @@ __plugin_meta__ = PluginMetadata(
         "nonebot.adapters.onebot.v11",
     },
 )
-
-clovers_logger.addHandler(LoguruHandler())
-
-# 加载配置
+driver = get_driver()
+driver.config.log_level
 config_data = get_plugin_config(Config)
-
+# 加载配置
+clovers_logger.addHandler(LoguruHandler(driver.config.log_level))
 clovers_config_file = config_data.clovers_config_file
 clovers_priority = config_data.clovers_priority
 
@@ -49,7 +48,7 @@ plugins_path.mkdir(exist_ok=True, parents=True)
 loader = PluginLoader(plugins_path, clovers_config_data.plugins_list)
 adapter = new_adapter(loader.plugins)
 
-get_driver().on_startup(adapter.startup)
+driver.on_startup(adapter.startup)
 
 main = on_message(priority=clovers_priority, block=False)
 
