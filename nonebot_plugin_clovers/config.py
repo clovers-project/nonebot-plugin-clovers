@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class Config(BaseModel):
     clovers_config_file: str = "clovers.toml"
     clovers_priority: int = 50
-    using_adapters: set[str] = {}
+    using_adapters: set[str] = set()
 
 
 class ConfigClovers(BaseModel):
