@@ -70,16 +70,19 @@ def add_response(Bot, Event, adapter: Adapter, adapter_key: str):
 using_adapters = config_data.using_adapters
 
 
+flag_name = lambda flag: "成功！" if flag else "失败..."
+
 if "nonebot.adapters.qq" in using_adapters:
     flag = True
     try:
         from .adapters import qq
         from nonebot.adapters.qq import Bot, MessageEvent
     except ModuleNotFoundError:
-        logger.error("nonebot.adapters.qq 加载失败")
+        logger.error("nonebot.adapters.qq 加载失败...")
         flag = False
     if flag:
         add_response(Bot, MessageEvent, qq.initializer(main), "QQ")
+        logger.success("nonebot.adapters.qq 加载成功！")
 
 if "nonebot.adapters.onebot.v11" in using_adapters:
     flag = True
@@ -88,6 +91,7 @@ if "nonebot.adapters.onebot.v11" in using_adapters:
         from nonebot.adapters.onebot.v11 import Bot, MessageEvent
     except ModuleNotFoundError:
         flag = False
-        logger.error("nonebot.adapters.onebot.v11 加载失败")
+        logger.error("nonebot.adapters.onebot.v11 加载失败...")
     if flag:
         add_response(Bot, MessageEvent, v11.initializer(main), "onebot.v11".upper())
+        logger.success("nonebot.adapters.onebot.v11 加载成功！")
