@@ -9,7 +9,7 @@ from nonebot.adapters.satori import (
     Message,
     MessageSegment,
 )
-from nonebot.adapters.satori.event import MessageCreatedEvent, PublicMessageCreatedEvent
+from nonebot.adapters.satori.event import MessageCreatedEvent
 
 
 def adapter(main: type[Matcher]) -> Adapter:
@@ -26,7 +26,7 @@ def adapter(main: type[Matcher]) -> Adapter:
         if isinstance(message, str):
             await send(MessageSegment.image(url=message))
         else:
-            await send(MessageSegment.image(raw=message))
+            await send(MessageSegment.image(raw=message, mime="image"))
 
     @adapter.send("voice")
     async def _(message: bytes | BytesIO | str, send: Callable[..., Coroutine] = main.send):
@@ -34,7 +34,7 @@ def adapter(main: type[Matcher]) -> Adapter:
         if isinstance(message, str):
             await send(MessageSegment.audio(url=message))
         else:
-            await send(MessageSegment.audio(raw=message))
+            await send(MessageSegment.audio(raw=message, mime="audio"))
 
     @adapter.send("list")
     async def _(message: list[Result], send: Callable[..., Coroutine] = main.send):
@@ -84,8 +84,7 @@ def adapter(main: type[Matcher]) -> Adapter:
 
     @adapter.kwarg("avatar")
     async def _(event: MessageCreatedEvent):
-        if event.member:
-            return event.member.avatar
+        return event.user.avatar
 
     @adapter.kwarg("group_avatar")
     async def _(event: MessageCreatedEvent):

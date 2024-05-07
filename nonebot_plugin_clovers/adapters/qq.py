@@ -6,7 +6,7 @@ from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.qq import (
     Bot,
-    MessageEvent,
+    MessageCreateEvent,
     AtMessageCreateEvent,
     GroupAtMessageCreateEvent,
     Message,
@@ -57,34 +57,34 @@ def adapter(main: type[Matcher]) -> Adapter:
         async for seg in message:
             await adapter.send_dict[seg.send_method](seg.data, send)
 
-    @adapter.kwarg("send_group_message")
-    async def _(bot: Bot, event: MessageEvent) -> Callable[[int, Result], Coroutine]:
-        async def send_group_message(group_id: int, result: Result):
-            send = lambda message: bot.send_group_msg(group_id=group_id, message=message)
-            await adapter.send_dict[result.send_method](result.data, send)
+    # @adapter.kwarg("send_group_message")
+    # async def _(bot: Bot, event: MessageEvent) -> Callable[[int, Result], Coroutine]:
+    #     async def send_group_message(group_id: int, result: Result):
+    #         send = lambda message: bot.send_group_msg(group_id=group_id, message=message)
+    #         await adapter.send_dict[result.send_method](result.data, send)
 
-        return send_group_message
+    #     return send_group_message
 
     @adapter.kwarg("user_id")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreateEvent):
         return event.get_user_id()
 
     @adapter.kwarg("group_id")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreateEvent):
         return getattr(event, "group_id", getattr(event, "guild_id", None))
 
     @adapter.kwarg("to_me")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreateEvent):
         return event.to_me
 
     @adapter.kwarg("nickname")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreateEvent):
         if isinstance(event, AtMessageCreateEvent):
             return event.author.username or event.get_user_id()
         return event.get_user_id()
 
     @adapter.kwarg("avatar")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreateEvent):
         if isinstance(event, AtMessageCreateEvent):
             return event.author.avatar
         return None
@@ -94,14 +94,14 @@ def adapter(main: type[Matcher]) -> Adapter:
     #     pass
 
     @adapter.kwarg("image_list")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreateEvent):
         if isinstance(event, AtMessageCreateEvent | GroupAtMessageCreateEvent):
             if event.attachments:
                 return [url for attachment in event.attachments if (url := attachment.url)]
             return []
 
     @adapter.kwarg("permission")
-    async def _(bot: Bot, event: MessageEvent) -> int:
+    async def _(bot: Bot, event: MessageCreateEvent) -> int:
         if await SUPERUSER(bot, event):
             return 3
         if isinstance(event, AtMessageCreateEvent):
@@ -114,7 +114,7 @@ def adapter(main: type[Matcher]) -> Adapter:
             return 0
 
     @adapter.kwarg("at")
-    async def _(event: MessageEvent) -> list[str]:
+    async def _(event: MessageCreateEvent) -> list[str]:
         if isinstance(event, AtMessageCreateEvent) and event.mentions:
             print(event.mentions)
             return [mention.id for mention in event.mentions]

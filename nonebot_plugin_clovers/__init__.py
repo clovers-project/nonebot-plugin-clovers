@@ -86,7 +86,7 @@ if "nonebot.adapters.onebot.v11" in using_adapters:
 
 if "nonebot.adapters.qq" in using_adapters:
     try:
-        from nonebot.adapters.qq import Bot, MessageEvent
+        from nonebot.adapters.qq import Bot, MessageCreateEvent
         from .adapters import qq
 
         logger.success("nonebot.adapters.qq 加载成功！")
@@ -96,7 +96,7 @@ if "nonebot.adapters.qq" in using_adapters:
         flag = False
 
     if flag:
-        add_response(main, Bot, MessageEvent, qq.adapter(main), "QQ")
+        add_response(main, Bot, MessageCreateEvent, qq.adapter(main), "QQ")
 
 if "nonebot.adapters.satori" in using_adapters:
     try:
@@ -111,4 +111,4 @@ if "nonebot.adapters.satori" in using_adapters:
         flag = False
 
     if flag:
-        add_response(main, Bot, MessageCreatedEvent, satori.adapter(main), "QQ")
+        add_response(main, Bot, MessageCreatedEvent, satori.adapter(main), "satori".upper())
