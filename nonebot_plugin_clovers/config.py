@@ -7,6 +7,7 @@ class Config(BaseModel):
     using_adapters: set[str] = {
         "nonebot.adapters.qq",
         "nonebot.adapters.onebot.v11",
+        "nonebot.adapters.satori",
     }
 
 

@@ -4,6 +4,11 @@ from nonebot import get_driver, get_plugin_config, on_message
 from nonebot.matcher import Matcher
 from nonebot.plugin import PluginMetadata
 from nonebot.log import LoguruHandler, logger
+from nonebot.adapters import (
+    Bot as BaseBot,
+    Event as BaseEvent,
+)
+from collections.abc import Callable
 from clovers.core.logger import logger as clovers_logger
 from clovers.core.adapter import Adapter
 from clovers.core.plugin import PluginLoader
@@ -17,10 +22,6 @@ __plugin_meta__ = PluginMetadata(
     type="application",
     homepage="https://github.com/KarisAya/nonebot_plugin_clovers",
     config=Config,
-    supported_adapters={
-        "nonebot.adapters.qq",
-        "nonebot.adapters.onebot.v11",
-    },
 )
 driver = get_driver()
 # 配置日志记录器
@@ -43,21 +44,19 @@ clovers_config_data = ConfigClovers.model_validate(clovers_config.get(config_key
 clovers_config[config_key] = clovers_config_data.model_dump()
 clovers_config.save()
 
-
 plugins_path = Path(clovers_config_data.plugins_path)
 plugins_path.mkdir(exist_ok=True, parents=True)
-
-loader = PluginLoader(plugins_path, clovers_config_data.plugins_list)
-
-clovers = new_clovers(loader.plugins)
-
+clovers = new_clovers(PluginLoader(plugins_path, clovers_config_data.plugins_list).plugins)
 driver.on_startup(clovers.startup)
 
-main = on_message(priority=clovers_priority, block=False)
 
-
-def add_response(Bot, Event, adapter: Adapter, adapter_key: str):
-    logger.info(f"加载适配器：{adapter_key}")
+def add_response(
+    main: type[Matcher],
+    Bot: type[BaseBot],
+    Event: type[BaseEvent],
+    adapter: Adapter,
+    adapter_key: str,
+):
     clovers.adapter_dict[adapter_key] = adapter
 
     @main.handle()
@@ -67,31 +66,49 @@ def add_response(Bot, Event, adapter: Adapter, adapter_key: str):
             matcher.stop_propagation()
 
 
-using_adapters = config_data.using_adapters
+using_adapters = __plugin_meta__.supported_adapters = config_data.using_adapters
 
+main = on_message(priority=clovers_priority, block=False)
 
-flag_name = lambda flag: "成功！" if flag else "失败..."
+if "nonebot.adapters.onebot.v11" in using_adapters:
+    try:
+        from nonebot.adapters.onebot.v11 import Bot, MessageEvent
+        from .adapters.onebot import v11
+
+        logger.success("nonebot.adapters.onebot.v11 加载成功！")
+        flag = True
+    except ModuleNotFoundError:
+        logger.error("nonebot.adapters.onebot.v11 加载失败...")
+        flag = False
+
+    if flag:
+        add_response(main, Bot, MessageEvent, v11.adapter(main), "onebot.v11".upper())
 
 if "nonebot.adapters.qq" in using_adapters:
-    flag = True
     try:
-        from .adapters import qq
         from nonebot.adapters.qq import Bot, MessageEvent
+        from .adapters import qq
+
+        logger.success("nonebot.adapters.qq 加载成功！")
+        flag = True
     except ModuleNotFoundError:
         logger.error("nonebot.adapters.qq 加载失败...")
         flag = False
-    if flag:
-        add_response(Bot, MessageEvent, qq.initializer(main), "QQ")
-        logger.success("nonebot.adapters.qq 加载成功！")
 
-if "nonebot.adapters.onebot.v11" in using_adapters:
-    flag = True
-    try:
-        from .adapters.onebot import v11
-        from nonebot.adapters.onebot.v11 import Bot, MessageEvent
-    except ModuleNotFoundError:
-        flag = False
-        logger.error("nonebot.adapters.onebot.v11 加载失败...")
     if flag:
-        add_response(Bot, MessageEvent, v11.initializer(main), "onebot.v11".upper())
-        logger.success("nonebot.adapters.onebot.v11 加载成功！")
+        add_response(main, Bot, MessageEvent, qq.adapter(main), "QQ")
+
+if "nonebot.adapters.satori" in using_adapters:
+    try:
+        from nonebot.adapters.satori import Bot
+        from nonebot.adapters.satori.event import MessageCreatedEvent
+        from .adapters import satori
+
+        logger.success("nonebot.adapters.satori 加载成功！")
+        flag = True
+    except ModuleNotFoundError:
+        logger.error("nonebot.adapters.satori 加载失败...")
+        flag = False
+
+    if flag:
+        add_response(main, Bot, MessageCreatedEvent, satori.adapter(main), "QQ")
