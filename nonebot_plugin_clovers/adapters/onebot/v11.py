@@ -120,4 +120,18 @@ def adapter(main: type[Matcher]) -> Adapter:
             user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
         return info_list
 
+    @adapter.kwarg("group_member_info")
+    async def _(bot: Bot, event: MessageEvent) -> Callable[[str], Coroutine]:
+        async def group_member_info(user_id: str):
+            if not isinstance(event, GroupMessageEvent):
+                return None
+            user_info = await bot.group_member_info(group_id=event.group_id, user_id=int(user_id))
+            member_user_id = str(user_info["user_id"])
+            user_info["user_id"] = member_user_id
+            user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={member_user_id}&s=640"
+
+            return user_info
+
+        return group_member_info
+
     return adapter

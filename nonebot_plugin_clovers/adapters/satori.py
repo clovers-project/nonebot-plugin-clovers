@@ -108,4 +108,38 @@ def adapter(main: type[Matcher]) -> Adapter:
     async def _(event: MessageCreatedEvent) -> list[str]:
         return [str(msg.data["id"]) for msg in event._message if msg.type == "at"]
 
+    @adapter.kwarg("group_member_list")
+    async def _(bot: Bot, event: MessageCreatedEvent) -> None | list[dict]:
+        if not event.guild:
+            return None
+        member_list = await bot.guild_member_list(guild_id=event.guild.id)
+        info_list = []
+        for member in member_list.data:
+            if not member.user:
+                continue
+            user_info = {}
+            user_info["user_id"] = member.user.id
+            user_info["avatar"] = member.avatar
+            user_info["nickname"] = member.name
+            user_info["card"] = member.nick
+            info_list.append(user_info)
+        return info_list
+
+    @adapter.kwarg("group_member_info")
+    async def _(bot: Bot, event: MessageCreatedEvent) -> Callable[[str], Coroutine]:
+        async def group_member_info(user_id: str):
+            if not event.guild:
+                return None
+            member = await bot.guild_member_get(guild_id=event.guild.id, user_id=user_id)
+            if not member.user:
+                return None
+            user_info = {}
+            user_info["user_id"] = member.user.id
+            user_info["avatar"] = member.avatar
+            user_info["nickname"] = member.name
+            user_info["card"] = member.nick
+            return user_info
+
+        return group_member_info
+
     return adapter
