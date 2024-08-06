@@ -4,15 +4,12 @@ from clovers.core.adapter import Adapter
 from clovers.core.plugin import Result
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
-from nonebot.adapters.onebot.v11 import (
+from nonebot.adapters.satori import (
     Bot,
-    MessageEvent,
-    GroupMessageEvent,
     Message,
     MessageSegment,
-    GROUP_ADMIN,
-    GROUP_OWNER,
 )
+from nonebot.adapters.satori.event import MessageCreatedEvent
 
 
 def adapter(main: type[Matcher]) -> Adapter:
@@ -26,12 +23,18 @@ def adapter(main: type[Matcher]) -> Adapter:
     @adapter.send("image")
     async def _(message: bytes | BytesIO | str, send: Callable[..., Coroutine] = main.send):
         """发送图片"""
-        await send(MessageSegment.image(message))
+        if isinstance(message, str):
+            await send(MessageSegment.image(url=message))
+        else:
+            await send(MessageSegment.image(raw=message, mime="image"))
 
     @adapter.send("voice")
     async def _(message: bytes | BytesIO | str, send: Callable[..., Coroutine] = main.send):
         """发送音频消息"""
-        await send(MessageSegment.record(message))
+        if isinstance(message, str):
+            await send(MessageSegment.audio(url=message))
+        else:
+            await send(MessageSegment.audio(raw=message, mime="audio"))
 
     @adapter.send("list")
     async def _(message: list[Result], send: Callable[..., Coroutine] = main.send):
@@ -56,80 +59,85 @@ def adapter(main: type[Matcher]) -> Adapter:
     @adapter.kwarg("send_group_message")
     async def _(bot: Bot) -> Callable[[str, Result], Coroutine]:
         async def send_group_message(group_id: str, result: Result):
-            send = lambda message: bot.send_group_msg(group_id=int(group_id), message=message)
+            send = lambda message: bot.send_message(channel_id=group_id, message=message)
             await adapter.send_dict[result.send_method](result.data, send)
 
         return send_group_message
 
     @adapter.kwarg("user_id")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreatedEvent):
         return event.get_user_id()
 
     @adapter.kwarg("group_id")
-    async def _(event: MessageEvent):
-        group_id = getattr(event, "group_id", None)
-        return str(group_id) if group_id else None
+    async def _(event: MessageCreatedEvent):
+        if event.guild:
+            return event.guild.id
 
     @adapter.kwarg("to_me")
-    async def _(event: MessageEvent):
+    async def _(event: MessageCreatedEvent):
         return event.to_me
 
     @adapter.kwarg("nickname")
-    async def _(event: MessageEvent):
-        return event.sender.card or event.sender.nickname
+    async def _(event: MessageCreatedEvent):
+        if event.member:
+            return event.member.nick or event.member.name
 
     @adapter.kwarg("avatar")
-    async def _(event: MessageEvent) -> str:
-        return f"https://q1.qlogo.cn/g?b=qq&nk={event.user_id}&s=640"
+    async def _(event: MessageCreatedEvent):
+        return event.user.avatar
 
     @adapter.kwarg("group_avatar")
-    async def _(event: MessageEvent) -> str:
-        if isinstance(event, GroupMessageEvent):
-            return f"https://p.qlogo.cn/gh/{event.group_id}/{event.group_id}/640"
-        return ""
+    async def _(event: MessageCreatedEvent):
+        if event.guild:
+            return event.guild.avatar
 
     @adapter.kwarg("image_list")
-    async def _(event: MessageEvent):
-        url = [msg.data["url"] for msg in event.message if msg.type == "image"]
+    async def _(event: MessageCreatedEvent):
+        url = [msg.data["src"] for msg in event._message if msg.type == "img"]
         if event.reply:
-            url += [msg.data["url"] for msg in event.reply.message if msg.type == "image"]
+            url += [msg.data["src"] for msg in event.reply._children if msg.type == "img"]
         return url
 
     @adapter.kwarg("permission")
-    async def _(bot: Bot, event: MessageEvent) -> int:
+    async def _(bot: Bot, event: MessageCreatedEvent) -> int:
         if await SUPERUSER(bot, event):
             return 3
-        if await GROUP_OWNER(bot, event):
-            return 2
-        if await GROUP_ADMIN(bot, event):
-            return 1
         return 0
 
     @adapter.kwarg("at")
-    async def _(event: MessageEvent) -> list[str]:
-        return [str(msg.data["qq"]) for msg in event.message if msg.type == "at"]
+    async def _(event: MessageCreatedEvent) -> list[str]:
+        return [str(msg.data["id"]) for msg in event._message if msg.type == "at"]
 
     @adapter.kwarg("group_member_list")
-    async def _(bot: Bot, event: MessageEvent) -> None | list[dict]:
-        if not isinstance(event, GroupMessageEvent):
+    async def _(bot: Bot, event: MessageCreatedEvent) -> None | list[dict]:
+        if not event.guild:
             return None
-        info_list = await bot.get_group_member_list(group_id=event.group_id)
-        for user_info in info_list:
-            user_id = str(user_info["user_id"])
-            user_info["user_id"] = user_id
-            user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
+        member_list = await bot.guild_member_list(guild_id=event.guild.id)
+        info_list = []
+        for member in member_list.data:
+            if not member.user:
+                continue
+            user_info = {}
+            user_info["user_id"] = member.user.id
+            user_info["avatar"] = member.avatar
+            user_info["nickname"] = member.name
+            user_info["card"] = member.nick
+            info_list.append(user_info)
         return info_list
 
     @adapter.kwarg("group_member_info")
-    async def _(bot: Bot, event: MessageEvent) -> Callable[[str], Coroutine]:
+    async def _(bot: Bot, event: MessageCreatedEvent) -> Callable[[str], Coroutine]:
         async def group_member_info(user_id: str):
-            if not isinstance(event, GroupMessageEvent):
+            if not event.guild:
                 return None
-            user_info = await bot.group_member_info(group_id=event.group_id, user_id=int(user_id))
-            member_user_id = str(user_info["user_id"])
-            user_info["user_id"] = member_user_id
-            user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={member_user_id}&s=640"
-
+            member = await bot.guild_member_get(guild_id=event.guild.id, user_id=user_id)
+            if not member.user:
+                return None
+            user_info = {}
+            user_info["user_id"] = member.user.id
+            user_info["avatar"] = member.avatar
+            user_info["nickname"] = member.name
+            user_info["card"] = member.nick
             return user_info
 
         return group_member_info
