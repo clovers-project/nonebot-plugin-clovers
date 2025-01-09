@@ -3,8 +3,9 @@ from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
 from nonebot.log import LoguruHandler
 from clovers import Clovers
-from clovers.core.logger import logger as clovers_logger
-from clovers.core.config import config as clovers_config
+from clovers.tools import list_modules
+from clovers.logger import logger as clovers_logger
+from clovers.config import config as clovers_config
 from .config import ConfigClovers
 
 __plugin_meta__ = PluginMetadata(
@@ -18,7 +19,6 @@ __plugin_meta__ = PluginMetadata(
 )
 driver = get_driver()
 clovers = Clovers()
-driver.on_startup(clovers.startup)
 # 配置日志记录器
 log_level = driver.config.log_level
 clovers_logger.setLevel(log_level)
@@ -49,7 +49,7 @@ else:
         return message
 
 
-@clovers.global_adapter.kwarg("Bot_Nickname")
+@clovers.adapter.property_method("Bot_Nickname")
 async def _():
     return Bot_NICKNAME
 
@@ -58,10 +58,10 @@ async def _():
 clovers.load_adapters(clovers_config_data.adapters)
 for dir in clovers_config_data.adapters_dirs:
     Path(dir).mkdir(exist_ok=True, parents=True)
-    clovers.load_adapters(Clovers.list_modules(dir))
+    clovers.load_adapters(list_modules(dir))
 
 
 clovers.load_plugins(clovers_config_data.plugins)
 for dir in clovers_config_data.plugin_dirs:
     Path(dir).mkdir(exist_ok=True, parents=True)
-    clovers.load_plugins(Clovers.list_modules(dir))
+    clovers.load_plugins(list_modules(dir))

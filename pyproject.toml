@@ -7,9 +7,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-nonebot2 = "^2.2.1"
-pydantic = "^2.7.1"
-clovers = "^0.1.5"
+nonebot2 = "^2.4.1"
+pydantic = "^2.10.4"
+clovers = "^0.3.0"
 nonebot-adapter-onebot = {version = "^2.4.3", optional = true}
 nonebot-adapter-qq = {version = "^1.4.3", optional = true}
 nonebot-adapter-satori = {version = "^0.11.5", optional = true}
