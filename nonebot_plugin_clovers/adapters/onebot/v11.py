@@ -164,7 +164,7 @@ async def _(group_id: str, /, bot: Bot):
     info_list = await bot.get_group_member_list(group_id=int(group_id))
     for user_info in info_list:
         user_id = str(user_info["user_id"])
-        user_info["group_id"] = str(user_info["user_id"])
+        user_info["group_id"] = str(user_info["group_id"])
         user_info["user_id"] = user_id
         user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
     return info_list
@@ -174,7 +174,7 @@ async def _(group_id: str, /, bot: Bot):
 async def _(group_id: str, user_id: str, /, bot: Bot):
     user_info = await bot.get_group_member_info(group_id=int(group_id), user_id=int(user_id))
     member_user_id = str(user_info["user_id"])
-    user_info["group_id"] = str(user_info["user_id"])
+    user_info["group_id"] = str(user_info["group_id"])
     user_info["user_id"] = member_user_id
     user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={member_user_id}&s=640"
     return user_info
