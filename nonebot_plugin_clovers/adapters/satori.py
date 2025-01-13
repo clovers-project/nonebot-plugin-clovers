@@ -1,107 +1,108 @@
-from io import BytesIO
-from collections.abc import Callable, Coroutine, AsyncGenerator
 from clovers import Adapter, Result
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.satori import Bot, Message, MessageSegment
 from nonebot.adapters.satori.event import MessageCreatedEvent
+from .typing import UrlOrData, ListMessage, SegmentedMessage, GroupMessage, PrivateMessage
+
 
 adapter = Adapter("SATORI")
-sending: dict[str, Callable[..., Coroutine]] = {}
 
 
-async def send_text(message: str, send: Callable[..., Coroutine]):
-    """发送纯文本"""
-    await send(MessageSegment.text(message))
-
-
-async def send_image(message: bytes | BytesIO | str, send: Callable[..., Coroutine]):
-    """发送图片"""
+def image2message(message: UrlOrData):
     if isinstance(message, str):
-        await send(MessageSegment.image(url=message))
+        return MessageSegment.image(url=message)
     else:
-        await send(MessageSegment.image(raw=message, mime="image"))
+        return MessageSegment.image(raw=message, mime="image")
 
 
-async def send_voice(message: bytes | BytesIO | str, send: Callable[..., Coroutine]):
-    """发送音频消息"""
+def voice2message(message: UrlOrData):
     if isinstance(message, str):
-        await send(MessageSegment.audio(url=message))
+        return MessageSegment.audio(url=message)
     else:
-        await send(MessageSegment.audio(raw=message, mime="audio"))
+        return MessageSegment.audio(raw=message, mime="audio")
 
 
-async def send_list(message: list[Result], send: Callable[..., Coroutine]):
-    """发送图片文本混合信息，@信息在此发送"""
+def list2message(message: ListMessage):
     msg = Message()
     for seg in message:
         match seg.send_method:
             case "text":
                 msg += MessageSegment.text(seg.data)
             case "image":
-                if isinstance(message, str):
-                    await send(MessageSegment.image(url=seg.data))
-                else:
-                    await send(MessageSegment.image(raw=seg.data, mime="image"))
+                msg += image2message(seg.data)
             case "at":
                 msg += MessageSegment.at(seg.data)
-    await send(msg)
+    return msg
 
 
-async def send_segmented(message: AsyncGenerator[Result, None], send: Callable[..., Coroutine]):
-    """发送分段消息"""
-    async for seg in message:
-        await sending[seg.send_method](seg.data, send)
-
-
-sending["text"] = send_text
-sending["image"] = send_image
-sending["voice"] = send_voice
-sending["list"] = send_list
-sending["segmented"] = send_segmented
+def to_message(result: Result) -> str | MessageSegment | Message | None:
+    match result.send_method:
+        case "text":
+            return result.data
+        case "image":
+            return image2message(result.data)
+        case "voice":
+            return voice2message(result.data)
+        case "list":
+            return list2message(result.data)
 
 
 @adapter.send_method("text")
-async def _(message, /, bot: Bot, event: MessageCreatedEvent):
-    await send_text(message, lambda message: bot.send(event=event, message=message))
+async def _(message: str, /, bot: Bot, event: MessageCreatedEvent):
+    await bot.send(event=event, message=message)
 
 
 @adapter.send_method("image")
-async def _(message, /, bot: Bot, event: MessageCreatedEvent):
-    await send_image(message, lambda message: bot.send(event=event, message=message))
+async def _(message: UrlOrData, /, bot: Bot, event: MessageCreatedEvent):
+    await bot.send(event=event, message=image2message(message))
 
 
 @adapter.send_method("voice")
-async def _(message, /, bot: Bot, event: MessageCreatedEvent):
-    await send_voice(message, lambda message: bot.send(event=event, message=message))
+async def _(message: UrlOrData, /, bot: Bot, event: MessageCreatedEvent):
+    await bot.send(event=event, message=voice2message(message))
 
 
 @adapter.send_method("list")
-async def _(message, /, bot: Bot, event: MessageCreatedEvent):
-    await send_list(message, lambda message: bot.send(event=event, message=message))
+async def _(message: ListMessage, /, bot: Bot, event: MessageCreatedEvent):
+    await bot.send(event=event, message=list2message(message))
 
 
 @adapter.send_method("segmented")
-async def _(message, /, bot: Bot, event: MessageCreatedEvent):
-    await send_segmented(message, lambda message: bot.send(event=event, message=message))
+async def _(message: SegmentedMessage, /, bot: Bot, event: MessageCreatedEvent):
+    async for seg in message:
+        msg = to_message(seg)
+        if msg:
+            await bot.send(event=event, message=msg)
 
 
 @adapter.send_method("group_message")
-async def _(message: dict, /, bot: Bot):
-    # Result("group_message", {"group_id": "123", "data": Result("text", "xxx")})
-    result: Result = message["data"]
+async def _(message: GroupMessage, /, bot: Bot):
+    result = message["data"]
     group_id = message["group_id"]
-    await sending[result.send_method](result.data, lambda message: bot.send_message(channel_id=group_id, message=message))
+    if result.send_method == "segmented":
+        async for seg in result.data:
+            msg = to_message(seg)
+            if msg:
+                await bot.send_message(channel_id=group_id, message=msg)
+    else:
+        msg = to_message(result)
+        if msg:
+            await bot.send_message(channel_id=group_id, message=msg)
 
 
 @adapter.send_method("private_message")
-async def _(message: dict, /, bot: Bot):
-    # Result("group_message", {"user_id": "123", "data": Result("text", "xxx")})
-    result: Result = message["data"]
+async def _(message: PrivateMessage, /, bot: Bot):
+    result = message["data"]
     user_id = message["user_id"]
-    await sending[result.send_method](result.data, lambda message: bot.send_private_message(user_id=user_id, message=message))
-
-
-# properties = ["user_id", "group_id", "to_me", "nickname", "avatar", "group_avatar", "image_list", "permission", "at"]
+    if result.send_method == "segmented":
+        async for seg in result.data:
+            msg = to_message(seg)
+            if msg:
+                await bot.send_private_message(user_id=user_id, message=msg)
+    else:
+        msg = to_message(result)
+        if msg:
+            await bot.send_private_message(user_id=user_id, message=msg)
 
 
 @adapter.property_method("user_id")
