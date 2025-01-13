@@ -1,6 +1,3 @@
-from io import BytesIO
-from pathlib import Path
-from collections.abc import Callable, AsyncGenerator, Coroutine
 from clovers.adapter import Adapter
 from clovers.plugin import Result
 from nonebot.adapters.qq import (
@@ -9,83 +6,74 @@ from nonebot.adapters.qq import (
     Message,
     MessageSegment,
 )
+from ..typing import UrlOrData, ListMessage, SegmentedMessage
 
 adapter = Adapter("QQ.General")
-sending: dict[str, Callable[..., Coroutine]] = {}
 
 
-async def send_text(message: str, send: Callable[..., Coroutine]):
-    """发送纯文本"""
-    await send(MessageSegment.text(message))
-
-
-async def send_image(message: bytes | BytesIO | str | Path, send: Callable[..., Coroutine]):
-    """发送图片"""
+def image2message(message: UrlOrData):
     if isinstance(message, str):
-        await send(MessageSegment.image(message))
+        return MessageSegment.image(message)
     else:
-        await send(MessageSegment.file_image(message))
+        return MessageSegment.file_image(message)
 
 
-async def send_voice(message: bytes | BytesIO | str | Path, send: Callable[..., Coroutine]):
-    """发送音频消息"""
+def voice2message(message: UrlOrData):
     if isinstance(message, str):
-        await send(MessageSegment.audio(message))
+        return MessageSegment.audio(message)
     else:
-        await send(MessageSegment.file_audio(message))
+        return MessageSegment.file_audio(message)
 
 
-async def send_list(message: list[Result], send: Callable[..., Coroutine]):
-    """发送图片文本混合信息"""
+def list2message(message: ListMessage):
     msg = Message()
     for seg in message:
         match seg.send_method:
             case "text":
-                msg += seg.data
+                msg += MessageSegment.text(seg.data)
             case "image":
-                if isinstance(message, str):
-                    await send(MessageSegment.image(seg.data))
-                else:
-                    await send(MessageSegment.file_image(seg.data))
-    await send(msg)
+                msg += image2message(seg.data)
+    return msg
 
 
-async def send_segmented(message: AsyncGenerator[Result, None], send: Callable[..., Coroutine]):
-    """发送分段消息"""
-    async for seg in message:
-        await sending[seg.send_method](seg.data, send)
-
-
-sending["text"] = send_text
-sending["image"] = send_image
-sending["voice"] = send_voice
-sending["list"] = send_list
-sending["segmented"] = send_segmented
+def to_message(result: Result) -> str | MessageSegment | Message | None:
+    match result.send_method:
+        case "text":
+            return result.data
+        case "image":
+            return image2message(result.data)
+        case "voice":
+            return voice2message(result.data)
+        case "list":
+            return list2message(result.data)
 
 
 @adapter.send_method("text")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_text(message, lambda message: bot.send(event=event, message=message))
+async def _(message: str, /, bot: Bot, event: MessageEvent):
+    await bot.send(message=message, event=event)
 
 
 @adapter.send_method("image")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_image(message, lambda message: bot.send(event=event, message=message))
+async def _(message: UrlOrData, /, bot: Bot, event: MessageEvent):
+    await bot.send(event=event, message=image2message(message))
 
 
 @adapter.send_method("voice")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_voice(message, lambda message: bot.send(event=event, message=message))
+async def _(message: UrlOrData, /, bot: Bot, event: MessageEvent):
+    await bot.send(event=event, message=voice2message(message))
 
 
 @adapter.send_method("list")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_list(message, lambda message: bot.send(event=event, message=message))
+async def _(message: ListMessage, /, bot: Bot, event: MessageEvent):
+    await bot.send(event=event, message=list2message(message))
 
 
 @adapter.send_method("segmented")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_segmented(message, lambda message: bot.send(event=event, message=message))
+async def _(message: SegmentedMessage, /, bot: Bot, event: MessageEvent):
+    async for seg in message:
+        msg = to_message(seg)
+        if msg:
+            await bot.send(event=event, message=msg)
 
 
 @adapter.property_method("user_id")

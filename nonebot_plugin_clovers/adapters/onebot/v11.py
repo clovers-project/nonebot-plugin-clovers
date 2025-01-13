@@ -1,5 +1,3 @@
-from io import BytesIO
-from collections.abc import Callable, Coroutine, AsyncGenerator
 from clovers import Adapter, Result
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import (
@@ -12,28 +10,12 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_OWNER,
 )
 
+from ..typing import UrlOrData, ListMessage, SegmentedMessage, GroupMessage, PrivateMessage
 
 adapter = Adapter("ONEBOT.V11")
-sending: dict[str, Callable[..., Coroutine]] = {}
 
 
-async def send_text(message: str, send: Callable[..., Coroutine]):
-    """发送纯文本"""
-    await send(MessageSegment.text(message))
-
-
-async def send_image(message: bytes | BytesIO | str, send: Callable[..., Coroutine]):
-    """发送图片"""
-    await send(MessageSegment.image(message))
-
-
-async def send_voice(message: bytes | BytesIO | str, send: Callable[..., Coroutine]):
-    """发送音频消息"""
-    await send(MessageSegment.record(message))
-
-
-async def send_list(message: list[Result], send: Callable[..., Coroutine]):
-    """发送图片文本混合信息，@信息在此发送"""
+def list2message(message: ListMessage):
     msg = Message()
     for seg in message:
         match seg.send_method:
@@ -43,64 +25,77 @@ async def send_list(message: list[Result], send: Callable[..., Coroutine]):
                 msg += MessageSegment.image(seg.data)
             case "at":
                 msg += MessageSegment.at(seg.data)
-    await send(msg)
+    return msg
 
 
-async def send_segmented(message: AsyncGenerator[Result, None], send: Callable[..., Coroutine]):
-    """发送分段消息"""
-    async for seg in message:
-        await sending[seg.send_method](seg.data, send)
-
-
-sending["text"] = send_text
-sending["image"] = send_image
-sending["voice"] = send_voice
-sending["list"] = send_list
-sending["segmented"] = send_segmented
+def to_message(result: Result) -> str | Message | None:
+    match result.send_method:
+        case "text":
+            return result.data
+        case "image":
+            return Message(MessageSegment.image(result.data))
+        case "voice":
+            return Message(MessageSegment.record(result.data))
+        case "list":
+            return list2message(result.data)
 
 
 @adapter.send_method("text")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_text(message, lambda message: bot.send(event=event, message=message))
+async def _(message: str, /, bot: Bot, event: MessageEvent):
+    await bot.send(message=message, event=event)
 
 
 @adapter.send_method("image")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_image(message, lambda message: bot.send(event=event, message=message))
+async def _(message: UrlOrData, /, bot: Bot, event: MessageEvent):
+    await bot.send(message=MessageSegment.image(message), event=event)
 
 
 @adapter.send_method("voice")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_voice(message, lambda message: bot.send(event=event, message=message))
+async def _(message: UrlOrData, /, bot: Bot, event: MessageEvent):
+    await bot.send(message=MessageSegment.record(message), event=event)
 
 
 @adapter.send_method("list")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_list(message, lambda message: bot.send(event=event, message=message))
+async def _(message: ListMessage, /, bot: Bot, event: MessageEvent):
+    await bot.send(message=list2message(message), event=event)
 
 
 @adapter.send_method("segmented")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await send_segmented(message, lambda message: bot.send(event=event, message=message))
+async def _(message: SegmentedMessage, /, bot: Bot, event: MessageEvent):
+    async for seg in message:
+        msg = to_message(seg)
+        if msg:
+            await bot.send(message=msg, event=event)
 
 
 @adapter.send_method("group_message")
-async def _(message: dict, /, bot: Bot):
-    # Result("group_message", {"group_id": "123", "data": Result("text", "xxx")})
-    result: Result = message["data"]
+async def _(message: GroupMessage, /, bot: Bot):
+    result = message["data"]
     group_id = int(message["group_id"])
-    await sending[result.send_method](result.data, lambda message: bot.send_group_msg(group_id=group_id, message=message))
+    if result.send_method == "segmented":
+        async for seg in result.data:
+            msg = to_message(seg)
+            if msg:
+                await bot.send_group_msg(group_id=group_id, message=msg)
+    else:
+        msg = to_message(result)
+        if msg:
+            await bot.send_group_msg(group_id=group_id, message=msg)
 
 
 @adapter.send_method("private_message")
-async def _(message: dict, /, bot: Bot):
-    # Result("group_message", {"user_id": "123", "data": Result("text", "xxx")})
-    result: Result = message["data"]
+async def _(message: PrivateMessage, /, bot: Bot):
+    result = message["data"]
     user_id = int(message["user_id"])
-    await sending[result.send_method](result.data, lambda message: bot.send_private_msg(user_id=user_id, message=message))
-
-
-# properties = ["user_id", "group_id", "to_me", "nickname", "avatar", "group_avatar", "image_list", "permission", "at"]
+    if result.send_method == "segmented":
+        async for seg in result.data:
+            msg = to_message(seg)
+            if msg:
+                await bot.send_private_msg(user_id=user_id, message=msg)
+    else:
+        msg = to_message(result)
+        if msg:
+            await bot.send_private_msg(user_id=user_id, message=msg)
 
 
 @adapter.property_method("user_id")
@@ -164,15 +159,17 @@ async def _(group_id: str, /, bot: Bot):
     info_list = await bot.get_group_member_list(group_id=int(group_id))
     for user_info in info_list:
         user_id = str(user_info["user_id"])
+        user_info["group_id"] = str(user_info["group_id"])
         user_info["user_id"] = user_id
         user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640"
-    return info_list
+    return user_info
 
 
 @adapter.call_method("group_member_info")
 async def _(group_id: str, user_id: str, /, bot: Bot):
     user_info = await bot.get_group_member_info(group_id=int(group_id), user_id=int(user_id))
     member_user_id = str(user_info["user_id"])
+    user_info["group_id"] = str(user_info["group_id"])
     user_info["user_id"] = member_user_id
     user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={member_user_id}&s=640"
     return user_info
