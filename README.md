@@ -2,8 +2,6 @@
 
 # nonebot-plugin-clovers
 
-NoneBot clovers 加载器
-
 ✨ 专用对接 NoneBot 框架的预制 clovers 运行例 ✨
 
 <img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
