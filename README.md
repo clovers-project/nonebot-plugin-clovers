@@ -16,11 +16,7 @@
 </a>
 </div>
 
-# 🎉 关于本模块
-
-- [nonebot2](https://github.com/nonebot/nonebot2) 跨平台 Python 异步聊天机器人框架
-
-- [文档](https://clovers-project.github.io/#/nonebot-plugin-clovers)
+[查看文档](https://clovers-project.github.io/#/nonebot-plugin-clovers)
 
 # 📞 联系
 
