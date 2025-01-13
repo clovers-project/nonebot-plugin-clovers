@@ -166,6 +166,7 @@ async def _(group_id: str, /, bot: Bot):
             continue
         user_info = member.model_dump()
         user_info["user_id"] = member.user.id
+        user_info["group_id"] = group_id
         user_info["avatar"] = member.avatar
         user_info["nickname"] = member.name
         user_info["card"] = member.nick
@@ -180,6 +181,7 @@ async def _(group_id: str, user_id: str, /, bot: Bot):
         return None
     user_info = member.model_dump()
     user_info["user_id"] = member.user.id
+    user_info["group_id"] = group_id
     user_info["avatar"] = member.avatar
     user_info["nickname"] = member.name
     user_info["card"] = member.nick
