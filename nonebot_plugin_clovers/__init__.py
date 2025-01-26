@@ -28,7 +28,6 @@ clovers_logger.addHandler(LoguruHandler(log_level))
 config_key = "clovers"
 clovers_config_data = ConfigClovers.model_validate(clovers_config.get(config_key, {}))
 clovers_config[config_key] = clovers_config_data.model_dump()
-clovers_config.save()
 
 # 加载 NoneBot 配置
 nonebot_config = driver.config
