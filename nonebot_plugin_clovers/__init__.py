@@ -1,5 +1,5 @@
 from pathlib import Path
-from nonebot import get_driver, require
+from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
 from nonebot.log import LoguruHandler
 from pathlib import Path
@@ -24,11 +24,6 @@ log_level = driver.config.log_level
 clovers_logger.setLevel(log_level)
 clovers_logger.addHandler(LoguruHandler(log_level))
 
-require("nonebot_plugin_localstore")
-
-import nonebot_plugin_localstore as store
-
-
 # 加载 Clovers配置
 config_key = "clovers"
 clovers_config[config_key] = clovers_config.get(config_key, {})
@@ -42,11 +37,8 @@ clovers_config[config_key]["Bot_NICKNAME"] = Bot_NICKNAME
 
 plugins: list[str] = clovers_config[config_key].setdefault("plugins", [])
 adapters: list[str] = clovers_config[config_key].setdefault("adapters", [])
-
-clovers_library = store.get_data_dir("clovers")
-
-plugin_dirs: list[str] = clovers_config[config_key].setdefault("plugin_dirs", [str(clovers_library / "plugins")])
-adapters_dirs: list[str] = clovers_config[config_key].setdefault("adapters_dirs", [str(clovers_library / "adapters")])
+plugin_dirs: list[str] = clovers_config[config_key].setdefault("plugin_dirs", [])
+adapters_dirs: list[str] = clovers_config[config_key].setdefault("adapters_dirs", [])
 
 if command_start:
 
