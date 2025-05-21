@@ -7,7 +7,6 @@ from nonebot.log import LoguruHandler
 from clovers import Leaf, Client as CloversClient, Adapter
 from clovers.utils import list_modules
 from clovers.logger import logger
-from clovers.config import config as clovers_config
 from .config import __config__
 from .adapters.typing import Handler
 
@@ -26,13 +25,11 @@ log_level = get_driver().config.log_level
 logger.setLevel(log_level)
 logger.addHandler(LoguruHandler(log_level))
 
-# 加载 Clovers配置
-config = clovers_config["clovers"] = clovers_config.get("clovers", {})
-
 # 加载 NoneBot 配置
 nonebot_config = get_driver().config
 command_start = [x for x in nonebot_config.command_start if x]
-Bot_NICKNAME = config["Bot_NICKNAME"] = next(iter(nonebot_config.nickname), "bot")
+Bot_NICKNAME = next(iter(nonebot_config.nickname), "bot")
+priority = __config__.nonebot_matcher_priority
 
 
 async def get_Bot_NICKNAME() -> str:
@@ -78,10 +75,11 @@ class Client(CloversClient):
         get_driver().on_shutdown(self.shutdown)
         self.leafs: list[NoneBotLeaf] = []
 
-    def plugins_ready(self):
+    def initialize_plugins(self):
         for leaf in self.leafs:
-            leaf.plugins.extend(self.plugins)
-            leaf.plugins_ready()
+            leaf.plugins = self.plugins
+            leaf.initialize_plugins()
+        self._ready = True
 
     @staticmethod
     def build_handler(handler: Handler, leaf: NoneBotLeaf) -> Handler:
@@ -102,12 +100,12 @@ class Client(CloversClient):
         raise RuntimeError(f"{self.name} 为寄生客户端，不需要独立运行")
 
 
-client: Client | None = None
+_client: Client | None = None
 
 
 def get_client():
     """获取全局 clovers 客户端"""
-    global client
-    if client is None:
-        client = Client()
-    return client
+    global _client
+    if _client is None:
+        _client = Client()
+    return _client

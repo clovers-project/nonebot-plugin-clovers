@@ -10,9 +10,11 @@ class Config(BaseModel):
         "nonebot_plugin_clovers.adapters.qq.guild",
         "nonebot_plugin_clovers.adapters.satori",
     ]
+    nonebot_matcher_priority: int = 100
 
 
-from clovers.config import config as clovers_config
+from clovers.config import Config as CloversConfig
 
+clovers_config = CloversConfig.environ()
 __config__ = Config.model_validate(clovers_config.get("clovers", {}))
 clovers_config["clovers"] = __config__.model_dump()

@@ -12,7 +12,6 @@ for import_name in __config__.using_adapters:
         assert adapter and isinstance(adapter, Adapter), f"{import_name} adapter is not valid"
         handler = getattr(module, "handler", None)
         assert handler and isinstance(handler, Handler), f"{import_name} handler is not valid"
+        get_client().register_adapter(adapter, handler)
     except Exception:
         logger.exception(f"{import_name} 加载失败")
-        continue
-    get_client().register_adapter(adapter, handler)

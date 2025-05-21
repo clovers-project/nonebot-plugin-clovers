@@ -8,7 +8,6 @@ async def handler(bot: Bot, event: GroupAtMessageCreateEvent, matcher: Matcher):
 
 
 adapter = Adapter("QQ.GROUP")
-
 adapter.update(general_adapter)
 
 

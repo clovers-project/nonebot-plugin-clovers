@@ -3,9 +3,6 @@ from nonebot.adapters.qq import Bot, MessageEvent, Message, MessageSegment
 from ..typing import FileLike, ListMessage, SegmentedMessage
 
 
-adapter = Adapter("QQ.General")
-
-
 def image2message(message: FileLike):
     if isinstance(message, str):
         return MessageSegment.image(message)
@@ -23,7 +20,7 @@ def voice2message(message: FileLike):
 def list2message(message: ListMessage):
     msg = Message()
     for seg in message:
-        match seg.send_method:
+        match seg.key:
             case "text":
                 msg += MessageSegment.text(seg.data)
             case "image":
@@ -32,7 +29,7 @@ def list2message(message: ListMessage):
 
 
 def to_message(result: Result) -> str | MessageSegment | Message | None:
-    match result.send_method:
+    match result.key:
         case "text":
             return result.data
         case "image":
@@ -41,6 +38,9 @@ def to_message(result: Result) -> str | MessageSegment | Message | None:
             return voice2message(result.data)
         case "list":
             return list2message(result.data)
+
+
+adapter = Adapter("QQ.General")
 
 
 @adapter.send_method("text")
