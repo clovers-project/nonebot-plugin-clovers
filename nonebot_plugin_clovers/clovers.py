@@ -1,70 +1,45 @@
 from pathlib import Path
-from functools import wraps
-from nonebot import on_message, get_driver
+from functools import wraps, cache
+from nonebot import get_driver
+from nonebot.matcher import Matcher
 from nonebot.adapters import Event
-from nonebot.plugin import PluginMetadata
-from nonebot.log import LoguruHandler
-from clovers import Leaf, Client as CloversClient, Adapter
+from clovers import Adapter, Leaf, Client as CloversClient
 from clovers.utils import list_modules
 from clovers.logger import logger
-from .config import __config__
+from clovers.config import Config as CloversConfig
+from .config import Config
 from .adapters.typing import Handler
 
-
-__plugin_meta__ = PluginMetadata(
-    name="clovers插件框架",
-    description="NoneBot clovers框架",
-    usage="加载即用",
-    type="library",
-    homepage="https://github.com/KarisAya/nonebot_plugin_clovers",
-    supported_adapters=None,
-    config=None,
-)
-# 配置日志记录器
-log_level = get_driver().config.log_level
-logger.setLevel(log_level)
-logger.addHandler(LoguruHandler(log_level))
-
 # 加载 NoneBot 配置
-nonebot_config = get_driver().config
-command_start = [x for x in nonebot_config.command_start if x]
-Bot_NICKNAME = next(iter(nonebot_config.nickname), "bot")
-priority = __config__.nonebot_matcher_priority
+Bot_NICKNAME = next(iter(get_driver().config.nickname), "bot")
 
-
-async def get_Bot_NICKNAME() -> str:
-    return Bot_NICKNAME
+__config__: dict = CloversConfig.environ().setdefault(__package__, {})
+config = Config.model_validate(__config__)
+__config__.update(config.model_dump())
 
 
 class NoneBotLeaf(Leaf):
     def __init__(self, adapter: Adapter):
         super().__init__(adapter.name)
         self.adapter.update(adapter)
-        self.adapter.property_method("Bot_Nickname")(get_Bot_NICKNAME)
+        self.adapter.property_method("Bot_Nickname")(self.Bot_NICKNAME)
 
-    if command_start:
+    @staticmethod
+    async def Bot_NICKNAME() -> str:
+        return Bot_NICKNAME
 
-        def extract_message(self, event: Event, **ignore) -> str | None:
-            message = event.get_plaintext()
-            for x in command_start:
-                if message.startswith(x):
-                    return message.lstrip(x)
-            return message
-
-    else:
-
-        def extract_message(self, event: Event, **ignore) -> str | None:
-            return event.get_plaintext()
+    def extract_message(self, event: Event, **ignore) -> str | None:
+        return event.get_plaintext()
 
 
 class Client(CloversClient):
-    def __init__(self, priority=100):
+    def __init__(self, matcher: type[Matcher]):
         super().__init__()
         self.name = "NoneBotCloversClient"
-        self.matcher = on_message(priority=priority, block=False)
-        for plugin in __config__.plugins:
+        self.matcher = matcher
+        for plugin in config.plugins:
             self.load_plugin(plugin)
-        for plugin_dir in __config__.plugin_dirs:
+        for plugin_dir in config.plugin_dirs:
             plugin_dir = Path(plugin_dir)
             if not plugin_dir.exists():
                 plugin_dir.mkdir(parents=True, exist_ok=True)
@@ -100,12 +75,7 @@ class Client(CloversClient):
         raise RuntimeError(f"{self.name} 为寄生客户端，不需要独立运行")
 
 
-_client: Client | None = None
-
-
-def get_client():
+@cache
+def get_client(matcher: type[Matcher]):
     """获取全局 clovers 客户端"""
-    global _client
-    if _client is None:
-        _client = Client()
-    return _client
+    return Client(matcher)
