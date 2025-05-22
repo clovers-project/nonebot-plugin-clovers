@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from clovers.config import Config as CloversConfig
 
 
 class Config(BaseModel):
@@ -13,8 +14,6 @@ class Config(BaseModel):
     nonebot_matcher_priority: int = 100
 
 
-from clovers.config import Config as CloversConfig
-
-clovers_config = CloversConfig.environ()
-__config__ = Config.model_validate(clovers_config.get("clovers", {}))
-clovers_config["clovers"] = __config__.model_dump()
+config_data = CloversConfig.environ().setdefault(__package__, {})
+config = Config.model_validate(config_data)
+config_data.update(config.model_dump())
