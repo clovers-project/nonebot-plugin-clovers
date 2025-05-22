@@ -16,9 +16,6 @@ from ..typing import (
 async def handler(bot: Bot, event: MessageCreatedEvent, matcher: Matcher): ...
 
 
-adapter = Adapter("SATORI")
-
-
 def image2message(message: FileLike):
     if isinstance(message, str):
         return MessageSegment.image(url=message)
@@ -38,7 +35,7 @@ def voice2message(message: FileLike):
 def list2message(message: ListMessage):
     msg = Message()
     for seg in message:
-        match seg.send_method:
+        match seg.key:
             case "text":
                 msg += MessageSegment.text(seg.data)
             case "image":
@@ -49,7 +46,7 @@ def list2message(message: ListMessage):
 
 
 def to_message(result: Result) -> str | MessageSegment | Message | None:
-    match result.send_method:
+    match result.key:
         case "text":
             return result.data
         case "image":
@@ -58,6 +55,9 @@ def to_message(result: Result) -> str | MessageSegment | Message | None:
             return voice2message(result.data)
         case "list":
             return list2message(result.data)
+
+
+adapter = Adapter("SATORI")
 
 
 @adapter.send_method("text")
@@ -92,7 +92,7 @@ async def _(message: SegmentedMessage, /, bot: Bot, event: MessageCreatedEvent):
 async def _(message: GroupMessage, /, bot: Bot):
     result = message["data"]
     group_id = message["group_id"]
-    if result.send_method == "segmented":
+    if result.key == "segmented":
         async for seg in result.data:
             msg = to_message(seg)
             if msg:
@@ -107,7 +107,7 @@ async def _(message: GroupMessage, /, bot: Bot):
 async def _(message: PrivateMessage, /, bot: Bot):
     result = message["data"]
     user_id = message["user_id"]
-    if result.send_method == "segmented":
+    if result.key == "segmented":
         async for seg in result.data:
             msg = to_message(seg)
             if msg:

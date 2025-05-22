@@ -1,4 +1,4 @@
-from clovers import Leaf, Adapter, Result
+from clovers import Adapter, Result
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import (
@@ -10,19 +10,22 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_ADMIN,
     GROUP_OWNER,
 )
-from ..typing import FileLike, ListMessage, SegmentedMessage, GroupMessage, PrivateMessage
+from ..typing import (
+    FileLike,
+    ListMessage,
+    SegmentedMessage,
+    GroupMessage,
+    PrivateMessage,
+)
 
 
 async def handler(bot: Bot, event: MessageEvent, matcher: Matcher): ...
 
 
-adapter = Adapter("ONEBOT.V11")
-
-
 def list2message(message: ListMessage):
     msg = Message()
     for seg in message:
-        match seg.send_method:
+        match seg.key:
             case "text":
                 msg += MessageSegment.text(seg.data)
             case "image":
@@ -33,7 +36,7 @@ def list2message(message: ListMessage):
 
 
 def to_message(result: Result) -> str | Message | None:
-    match result.send_method:
+    match result.key:
         case "text":
             return result.data
         case "image":
@@ -42,6 +45,9 @@ def to_message(result: Result) -> str | Message | None:
             return Message(MessageSegment.record(result.data))
         case "list":
             return list2message(result.data)
+
+
+adapter = Adapter("ONEBOT.V11")
 
 
 @adapter.send_method("text")
@@ -89,7 +95,7 @@ async def _(message: ListMessage, /, bot: Bot, event: MessageEvent):
 async def _(message: GroupMessage, /, bot: Bot):
     result = message["data"]
     group_id = int(message["group_id"])
-    if result.send_method == "segmented":
+    if result.key == "segmented":
         async for seg in result.data:
             msg = to_message(seg)
             if msg:
@@ -104,7 +110,7 @@ async def _(message: GroupMessage, /, bot: Bot):
 async def _(message: PrivateMessage, /, bot: Bot):
     result = message["data"]
     user_id = int(message["user_id"])
-    if result.send_method == "segmented":
+    if result.key == "segmented":
         async for seg in result.data:
             msg = to_message(seg)
             if msg:

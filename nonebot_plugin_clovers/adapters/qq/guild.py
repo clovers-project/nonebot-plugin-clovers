@@ -14,7 +14,6 @@ async def handler(bot: Bot, event: AtMessageCreateEvent, matcher: Matcher): ...
 
 
 adapter = Adapter("QQ.GUILD")
-
 adapter.update(general_adapter)
 
 
