@@ -1,7 +1,6 @@
 from pathlib import Path
 from functools import wraps, cache
-from nonebot import get_driver
-from nonebot.matcher import Matcher
+from nonebot import on_message, get_driver
 from nonebot.adapters import Event
 from clovers import Adapter, Leaf, Client as CloversClient
 from clovers.utils import list_modules
@@ -13,7 +12,7 @@ from .adapters.typing import Handler
 # 加载 NoneBot 配置
 Bot_NICKNAME = next(iter(get_driver().config.nickname), "bot")
 
-__config__: dict = CloversConfig.environ().setdefault(__package__, {})
+__config__: dict = CloversConfig.environ().setdefault("clovers", {})
 config = Config.model_validate(__config__)
 __config__.update(config.model_dump())
 
@@ -33,10 +32,10 @@ class NoneBotLeaf(Leaf):
 
 
 class Client(CloversClient):
-    def __init__(self, matcher: type[Matcher]):
+    def __init__(self, priority: int):
         super().__init__()
         self.name = "NoneBotCloversClient"
-        self.matcher = matcher
+        self.matcher = on_message(priority=priority, block=False)
         for plugin in config.plugins:
             self.load_plugin(plugin)
         for plugin_dir in config.plugin_dirs:
@@ -76,6 +75,6 @@ class Client(CloversClient):
 
 
 @cache
-def get_client(matcher: type[Matcher]):
+def get_client(priority: int):
     """获取全局 clovers 客户端"""
-    return Client(matcher)
+    return Client(priority)

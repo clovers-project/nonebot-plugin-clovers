@@ -1,6 +1,6 @@
 from importlib import import_module
 from nonebot.plugin import PluginMetadata
-from nonebot import on_message, get_driver, get_plugin_config
+from nonebot import get_driver, get_plugin_config
 from nonebot.log import logger, LoguruHandler
 from clovers.logger import logger as clovers_logger
 from clovers import Adapter
@@ -12,7 +12,7 @@ __plugin_meta__ = PluginMetadata(
     name="NoneBotCloversClient",
     description="对接 NoneBot 框架的 clovers 寄生客户端",
     usage="加载即用",
-    type="library",
+    type="application",
     homepage="https://github.com/clovers-project/nonebot-plugin-clovers",
     supported_adapters=None,
     config=NBPluginConfig,
@@ -28,7 +28,7 @@ using_adapters = nb_config.clovers_using_adapters
 priority = nb_config.clovers_matcher_priority
 # 创建 NoneBotCloversClient
 
-client = get_client(on_message(priority=priority, block=False))
+client = get_client(priority)
 for import_name in using_adapters:
     try:
         module = import_module(import_name)
