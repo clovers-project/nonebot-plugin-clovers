@@ -26,9 +26,11 @@ clovers_logger.addHandler(LoguruHandler(log_level))
 nb_config = get_plugin_config(NBPluginConfig)
 using_adapters = nb_config.clovers_using_adapters
 priority = nb_config.clovers_matcher_priority
+
 # 创建 NoneBotCloversClient
 
 client = get_client(priority)
+
 for import_name in using_adapters:
     try:
         module = import_module(import_name)
