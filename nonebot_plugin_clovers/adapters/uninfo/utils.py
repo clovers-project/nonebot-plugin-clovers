@@ -1,32 +1,10 @@
-from io import BytesIO
 from pathlib import Path
 from collections import deque
 from nonebot.adapters import Bot, Event
 from nonebot_plugin_alconna.uniseg import UniMessage, Target
 from nonebot_plugin_uninfo import get_session, Session
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, Result
-from nonebot_plugin_clovers import is_local
-
-
-def format_file_local(file):
-    return file
-
-
-def format_file_remote(file: FileLike) -> str | bytes:
-    match file:
-        case str():
-            if file.startswith("http") or file.startswith("base64://"):
-                return file
-            return (Path(file[:7]) if file.startswith("file://") else Path(file)).read_bytes()
-        case Path():
-            return file.read_bytes()
-        case BytesIO():
-            return file.getvalue()
-        case _:
-            return file
-
-
-format_file = format_file_local if is_local else format_file_remote
+from nonebot_plugin_clovers.adapters.utils import format_file, format_filename
 
 
 def image2message(message: FileLike):
@@ -40,17 +18,6 @@ def image2message(message: FileLike):
             return UniMessage.image(raw=message)
 
 
-def video2message(message: FileLike):
-    message = format_file(message)
-    match message:
-        case str():
-            return UniMessage.video(url=message)
-        case Path():
-            return UniMessage.video(path=message)
-        case _:
-            return UniMessage.video(raw=message)
-
-
 def voice2message(message: FileLike):
     message = format_file(message)
     match message:
@@ -62,15 +29,27 @@ def voice2message(message: FileLike):
             return UniMessage.voice(raw=message)
 
 
-def file2message(message: FileLike):
+def video2message(message: FileLike):
     message = format_file(message)
     match message:
         case str():
-            return UniMessage.file(url=message)
+            return UniMessage.video(url=message)
         case Path():
-            return UniMessage.file(path=message)
+            return UniMessage.video(path=message)
         case _:
-            return UniMessage.file(raw=message)
+            return UniMessage.video(raw=message)
+
+
+def file2message(message: FileLike):
+    filename = format_filename(message)
+    message = format_file(message)
+    match message:
+        case str():
+            return UniMessage.file(url=message, name=filename)
+        case Path():
+            return UniMessage.file(path=message, name=filename)
+        case _:
+            return UniMessage.file(raw=message, name=filename)
 
 
 def list2message(message: SequenceMessage) -> UniMessage:

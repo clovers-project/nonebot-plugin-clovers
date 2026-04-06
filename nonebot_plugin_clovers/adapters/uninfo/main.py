@@ -7,10 +7,10 @@ from clovers_client.event import MemberInfo
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
 from .utils import (
     image2message,
-    list2message,
     voice2message,
     video2message,
     file2message,
+    list2message,
     send_segmented_result,
     send_result,
     get_current_session,
