@@ -118,7 +118,6 @@ async def _(event: MessageCreatedEvent):
 async def _(bot: Bot, event: MessageCreatedEvent):
     if await SUPERUSER(bot, event):
         return 3
-    print(event.model_dump())
     return 0
 
 
