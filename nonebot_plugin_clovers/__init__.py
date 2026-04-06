@@ -1,13 +1,12 @@
-from importlib import import_module
+from nonebot import on_message, get_driver
 from nonebot.plugin import PluginMetadata
 from nonebot import get_driver, get_plugin_config
-from nonebot.log import logger, LoguruHandler
+from nonebot.log import LoguruHandler
 from clovers.logger import logger as clovers_logger
-from clovers import Adapter
-from .adapters.typing import Handler
-from .clovers import Client as NoneBotCloversClient
-from .config import NBPluginConfig
+from .clovers import NoneBotCore
+from .config import Config
 
+__all__ = ["NoneBotCore", "__plugin_meta__"]
 __plugin_meta__ = PluginMetadata(
     name="NoneBotCloversClient",
     description="对接 NoneBot 框架的 clovers 寄生客户端",
@@ -15,29 +14,26 @@ __plugin_meta__ = PluginMetadata(
     type="application",
     homepage="https://github.com/clovers-project/nonebot-plugin-clovers",
     supported_adapters=None,
-    config=NBPluginConfig,
+    config=Config,
 )
 # 配置日志记录器
-log_level = get_driver().config.log_level
-clovers_logger.setLevel(log_level)
-clovers_logger.addHandler(LoguruHandler(log_level))
-
+LOG_LEVEL = get_driver().config.log_level
+clovers_logger.setLevel(LOG_LEVEL)
+clovers_logger.addHandler(LoguruHandler(LOG_LEVEL))
 # 加载插件配置
-nb_config = get_plugin_config(NBPluginConfig)
-using_adapters = nb_config.clovers_using_adapters
-priority = nb_config.clovers_matcher_priority
-
+plugin_config = get_plugin_config(Config).clovers
+plugins = plugin_config.plugins
+plugin_dirs = plugin_config.plugin_dirs
+using_adapters = plugin_config.using_adapters
+priority = plugin_config.matcher_priority
 # 创建 NoneBotCloversClient
-
-client = NoneBotCloversClient(priority)
-
-for import_name in using_adapters:
-    try:
-        module = import_module(import_name)
-        adapter = getattr(module, "__adapter__", None)
-        assert adapter and isinstance(adapter, Adapter), f"{import_name} adapter is not valid"
-        handler = getattr(module, "handler", None)
-        assert handler and isinstance(handler, Handler), f"{import_name} handler is not valid"
-        client.register_adapter(adapter, handler)
-    except Exception:
-        logger.exception(f"{import_name} 加载失败")
+driver = get_driver()
+bot_name = next(iter(driver.config.nickname), "bot")
+matcher = on_message(priority=priority, block=False)
+for adapter in using_adapters:
+    package = adapter.replace("~", f"{__package__}.adapters.")
+    core = NoneBotCore(package, bot_name, plugins, plugin_dirs)
+    driver.on_startup(core.startup)
+    driver.on_shutdown(core.shutdown)
+    matcher.append_handler(core.handler)
+    clovers_logger.info(f"NoneBotCloversClient 注册响应：{core.adapter.name}")
