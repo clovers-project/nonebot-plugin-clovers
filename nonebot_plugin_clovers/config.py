@@ -1,12 +1,14 @@
-from pydantic import BaseModel
+from clovers_client import Config as CloversConfig
 
 
-class ScopedConfig(BaseModel):
+class ScopedConfig(CloversConfig):
     using_adapters: list[str] = ["~onebot.v11", "~qq.group", "~qq.guild", "~satori", "~uninfo"]
-    matcher_priority: int = 100
+    adapters: list[str] = []
+    priority: int = 100
     plugins: list[str] = []
     plugin_dirs: list[str] = []
+    is_local: bool = True
 
 
 class Config(ScopedConfig):
-    clovers: ScopedConfig
+    clovers: ScopedConfig = ScopedConfig.sync_config()

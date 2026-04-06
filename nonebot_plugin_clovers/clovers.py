@@ -13,12 +13,7 @@ class NoneBotCore(CloversCore):
         plugin_list: list[str],
         plugin_dirs: list[str],
     ):
-        super().__init__(adapter)
-
-        self.adapter.property_method("Bot_Nickname")(self.bot_name)
-        self.adapter.load(adapter)
-        self.plugins.load_plugin(plugin_list, plugin_dirs)
-        self.BOT_NICKNAME = bot_name
+        super().__init__("NoneBotClovers")
 
         @wraps(import_module(adapter).handler)
         async def handler(bot, event, matcher):
@@ -26,6 +21,10 @@ class NoneBotCore(CloversCore):
                 matcher.stop_propagation()
 
         self.handler = handler
+        self.adapter.property_method("Bot_Nickname")(self.bot_name)
+        self.adapter.load(adapter)
+        self.plugins.load_plugin(plugin_list, plugin_dirs)
+        self.BOT_NICKNAME = bot_name
 
     @staticmethod
     async def handler(bot: Bot, event: Event, matcher: Matcher) -> None: ...

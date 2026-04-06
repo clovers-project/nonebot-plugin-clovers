@@ -17,6 +17,7 @@ from .utils import (
     get_current_unimsg,
 )
 
+
 adapter = Adapter("UNINFO")
 
 

@@ -1,12 +1,36 @@
+from io import BytesIO
 from pathlib import Path
 from collections import deque
 from nonebot.adapters import Bot, Event
 from nonebot_plugin_alconna.uniseg import UniMessage, Target
 from nonebot_plugin_uninfo import get_session, Session
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, Result
+from nonebot_plugin_clovers import is_local
+
+
+def format_file_local(file):
+    return file
+
+
+def format_file_remote(file: FileLike) -> str | bytes:
+    match file:
+        case str():
+            if file.startswith("http") or file.startswith("base64://"):
+                return file
+            return (Path(file[:7]) if file.startswith("file://") else Path(file)).read_bytes()
+        case Path():
+            return file.read_bytes()
+        case BytesIO():
+            return file.getvalue()
+        case _:
+            return file
+
+
+format_file = format_file_local if is_local else format_file_remote
 
 
 def image2message(message: FileLike):
+    message = format_file(message)
     match message:
         case str():
             return UniMessage.image(url=message)
@@ -17,6 +41,7 @@ def image2message(message: FileLike):
 
 
 def video2message(message: FileLike):
+    message = format_file(message)
     match message:
         case str():
             return UniMessage.video(url=message)
@@ -27,6 +52,7 @@ def video2message(message: FileLike):
 
 
 def voice2message(message: FileLike):
+    message = format_file(message)
     match message:
         case str():
             return UniMessage.voice(url=message)
@@ -37,6 +63,7 @@ def voice2message(message: FileLike):
 
 
 def file2message(message: FileLike):
+    message = format_file(message)
     match message:
         case str():
             return UniMessage.file(url=message)
