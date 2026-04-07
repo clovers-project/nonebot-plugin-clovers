@@ -39,8 +39,8 @@ for adapter in using_adapters:
         name = package[len(prefix) :].upper()
     else:
         name = package
+    clovers_logger.info(f"NoneBotCloversClient 注册响应：{name}")
     core = NoneBotCore(package, bot_name, plugins, plugin_dirs, name)
     driver.on_startup(core.startup)
     driver.on_shutdown(core.shutdown)
     matcher.append_handler(core.handler)
-    clovers_logger.info(f"NoneBotCloversClient 注册响应：{core.adapter.name}")

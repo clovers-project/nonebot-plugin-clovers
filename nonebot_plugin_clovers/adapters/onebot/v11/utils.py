@@ -1,8 +1,7 @@
-from pathlib import Path
 from collections.abc import Callable, Coroutine
 from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, Result
-from nonebot_plugin_clovers.adapters.utils import format_file, format_filename
+from nonebot_plugin_clovers.adapters.utils import format_file
 
 
 def image2message(message: FileLike):

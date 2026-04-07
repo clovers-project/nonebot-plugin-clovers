@@ -11,9 +11,8 @@ from nonebot.adapters.onebot.v11 import (
 )
 from clovers_client.event import MemberInfo, PermissionLiteral, FlatContextUnit
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
+from nonebot_plugin_clovers.adapters.utils import file2url, format_filename
 from .utils import (
-    format_file,
-    format_filename,
     image2message,
     voice2message,
     video2message,
@@ -62,12 +61,12 @@ async def _(message: FileLike, /, bot: Bot, event: MessageEvent):
 
 @ADAPTER.send_method("file")
 async def _(message: FileLike, /, bot: Bot, event: MessageEvent):
-    file = format_file(message)
+    url = file2url(message)
     name = format_filename(message)
     if isinstance(event, GroupMessageEvent):
-        return bot.upload_group_file(group_id=event.group_id, file=file, name=name)
+        await bot.upload_group_file(group_id=event.group_id, file=url, name=name)
     else:
-        return bot.upload_private_file(user_id=event.user_id, file=file, name=name)
+        await bot.upload_private_file(user_id=event.user_id, file=url, name=name)
 
 
 @ADAPTER.send_method("segmented")

@@ -1,8 +1,9 @@
 from io import BytesIO
 from pathlib import Path
+from base64 import b64encode
 from datetime import datetime
 from clovers_client.result import FileLike
-from nonebot_plugin_clovers.adapters.utils import format_file, format_filename
+from nonebot_plugin_clovers import is_local
 
 
 def format_file_local(file):
@@ -47,3 +48,20 @@ def format_filename(file: FileLike) -> str:
             return file.name
         case _:
             return f"{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.txt"
+
+
+def b64url(data: bytes):
+    return f"base64://{b64encode(data).decode()}"
+
+
+def file2url(file: FileLike):
+    file = format_file(file)
+    match file:
+        case str():
+            return file
+        case Path():
+            return file.resolve().as_uri()
+        case BytesIO():
+            return b64url(file.getvalue())
+        case _:
+            return b64url(file)
