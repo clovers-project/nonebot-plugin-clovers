@@ -1,9 +1,10 @@
 from clovers import Adapter
 from nonebot.permission import SUPERUSER
+from nonebot.matcher import Matcher
 from nonebot.adapters.satori import Bot, MessageSegment
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.models import Member
-from clovers_client.event import MemberInfo
+from clovers_client.event import MemberInfo, PermissionLiteral
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
 from .utils import (
     image2message,
@@ -16,6 +17,10 @@ from .utils import (
 )
 
 adapter = Adapter("SATORI")
+
+
+@adapter.call_method("none")
+async def handler(bot: Bot, event: MessageCreatedEvent, matcher: Matcher): ...
 
 
 @adapter.send_method("at")
@@ -70,17 +75,17 @@ async def _(message: PrivateMessage, /, bot: Bot):
 
 
 @adapter.property_method("to_me")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> bool:
     return event.to_me
 
 
 @adapter.property_method("at")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> list[str]:
     return [seg.data["id"] for seg in event.get_message().query("at")]
 
 
 @adapter.property_method("image_list")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> list[str]:
     url = [seg.data["src"] for seg in event.get_message().query("img")]
     if event.reply:
         url.extend(seg.data["src"] for seg in event.reply.children.query("img"))
@@ -88,34 +93,38 @@ async def _(event: MessageCreatedEvent):
 
 
 @adapter.property_method("user_id")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> str:
     return event.get_user_id()
 
 
 @adapter.property_method("nickname")
-async def _(event: MessageCreatedEvent):
-    return event.member.nick or (user.name if (user := event.member.user) else "未知用户") if event.member else "未知用户"
+async def _(event: MessageCreatedEvent) -> str:
+    if member := event.member:
+        if user := member.user:
+            return user.nick or user.name or "未知用户"
+        return member.nick or "未知用户"
+    return "未知用户"
 
 
 @adapter.property_method("avatar")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> str:
     return event.user.avatar or ""
 
 
 @adapter.property_method("group_id")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> str | None:
     if event.guild:
         return event.guild.id
 
 
 @adapter.property_method("group_avatar")
-async def _(event: MessageCreatedEvent):
+async def _(event: MessageCreatedEvent) -> str | None:
     if event.guild:
         return event.guild.avatar
 
 
 @adapter.property_method("permission")
-async def _(bot: Bot, event: MessageCreatedEvent):
+async def _(bot: Bot, event: MessageCreatedEvent) -> PermissionLiteral:
     if await SUPERUSER(bot, event):
         return 3
     return 0

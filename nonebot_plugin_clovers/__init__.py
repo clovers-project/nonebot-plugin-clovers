@@ -33,8 +33,13 @@ driver = get_driver()
 bot_name = next(iter(driver.config.nickname), "bot")
 matcher = on_message(priority=priority, block=False)
 for adapter in using_adapters:
-    package = adapter.replace("~", f"{__package__}.adapters.")
-    core = NoneBotCore(package, bot_name, plugins, plugin_dirs)
+    prefix = f"{__package__}.adapters."
+    package = adapter.replace("~", prefix)
+    if package.startswith(prefix):
+        name = package[len(prefix) :].upper()
+    else:
+        name = package
+    core = NoneBotCore(package, bot_name, plugins, plugin_dirs, name)
     driver.on_startup(core.startup)
     driver.on_shutdown(core.shutdown)
     matcher.append_handler(core.handler)

@@ -1,9 +1,10 @@
 from clovers import Adapter
+from nonebot.matcher import Matcher
 from nonebot.adapters import Bot, Event
 from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna.uniseg import UniMessage, Target, Image, At
 from nonebot_plugin_uninfo import ADMIN, OWNER, get_interface, Member
-from clovers_client.event import MemberInfo
+from clovers_client.event import MemberInfo, PermissionLiteral
 from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
 from .utils import (
     image2message,
@@ -19,6 +20,10 @@ from .utils import (
 
 
 adapter = Adapter("UNINFO")
+
+
+@adapter.call_method("none")
+async def handler(bot: Bot, event: Event, matcher: Matcher): ...
 
 
 @adapter.send_method("at")
@@ -73,35 +78,35 @@ async def _(message: PrivateMessage, /, bot: Bot):
 
 
 @adapter.property_method("to_me")
-async def _(event: Event):
+async def _(event: Event) -> bool:
     return event.is_tome()
 
 
 @adapter.property_method("at")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> list[str]:
     unimsg: UniMessage[At] = get_current_unimsg(bot, event).get(At)
     return [msg.target for msg in unimsg]
 
 
 @adapter.property_method("image_list")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> list[str]:
     unimsg: UniMessage[Image] = get_current_unimsg(bot, event).get(Image)
     return [url for msg in unimsg if (url := msg.url) is not None]
 
 
 @adapter.property_method("user_id")
-async def _(event: Event):
+async def _(event: Event) -> str:
     return event.get_user_id()
 
 
 @adapter.property_method("nickname")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> str:
     session = await get_current_session(bot, event)
     return event.get_user_id() if session is None else session.user.nick or session.user.name or session.user.id
 
 
 @adapter.property_method("avatar")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> str:
     session = await get_current_session(bot, event)
     if session and (avatar := session.user.avatar):
         return avatar
@@ -110,13 +115,13 @@ async def _(bot: Bot, event: Event):
 
 
 @adapter.property_method("group_id")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> str | None:
     session = await get_current_session(bot, event)
     return None if session is None else session.scene.id
 
 
 @adapter.property_method("group_avatar")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> str | None:
     session = await get_current_session(bot, event)
     if session and (avatar := session.scene.avatar):
         return avatar
@@ -129,7 +134,7 @@ ADMIN_CHECK = ADMIN()
 
 
 @adapter.property_method("permission")
-async def _(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event) -> PermissionLiteral:
     if await SUPERUSER(bot, event):
         return 3
     elif await OWNER_CHECK(bot, event):
