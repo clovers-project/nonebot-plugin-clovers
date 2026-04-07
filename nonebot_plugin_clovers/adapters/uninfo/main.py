@@ -19,93 +19,93 @@ from .utils import (
 )
 
 
-adapter = Adapter("UNINFO")
+ADAPTER = Adapter("UNINFO")
 
 
-@adapter.call_method("none")
+@ADAPTER.call_method("none")
 async def handler(bot: Bot, event: Event, matcher: Matcher): ...
 
 
-@adapter.send_method("at")
+@ADAPTER.send_method("at")
 async def _(message: str, /, bot: Bot, event: Event):
     await UniMessage.at(message).send(event, bot)
 
 
-@adapter.send_method("text")
+@ADAPTER.send_method("text")
 async def _(message: str, /, bot: Bot, event: Event):
     await UniMessage.text(message).send(event, bot)
 
 
-@adapter.send_method("image")
+@ADAPTER.send_method("image")
 async def _(message: FileLike, /, bot: Bot, event: Event):
     await image2message(message).send(event, bot)
 
 
-@adapter.send_method("list")
+@ADAPTER.send_method("list")
 async def _(message: SequenceMessage, /, bot: Bot, event: Event):
     if unimsg := list2message(message):
         await unimsg.send(event, bot)
 
 
-@adapter.send_method("voice")
+@ADAPTER.send_method("voice")
 async def _(message: FileLike, /, bot: Bot, event: Event):
     await voice2message(message).send(event, bot)
 
 
-@adapter.send_method("video")
+@ADAPTER.send_method("video")
 async def _(message: FileLike, /, bot: Bot, event: Event):
     await video2message(message).send(event, bot)
 
 
-@adapter.send_method("file")
+@ADAPTER.send_method("file")
 async def _(message: FileLike, /, bot: Bot, event: Event):
     await file2message(message).send(event, bot)
 
 
-@adapter.send_method("segmented")
+@ADAPTER.send_method("segmented")
 async def _(message: SegmentedMessage, /, bot: Bot, event: Event):
     await send_segmented_result(message, event=event, bot=bot)
 
 
-@adapter.send_method("group_message")
+@ADAPTER.send_method("group_message")
 async def _(message: GroupMessage, /, bot: Bot):
     await send_result(Target(id=message["group_id"], private=False, self_id=bot.self_id), message["data"], bot=bot)
 
 
-@adapter.send_method("private_message")
+@ADAPTER.send_method("private_message")
 async def _(message: PrivateMessage, /, bot: Bot):
     await send_result(Target(id=message["user_id"], private=True, self_id=bot.self_id), message["data"], bot=bot)
 
 
-@adapter.property_method("to_me")
+@ADAPTER.property_method("to_me")
 async def _(event: Event) -> bool:
     return event.is_tome()
 
 
-@adapter.property_method("at")
+@ADAPTER.property_method("at")
 async def _(bot: Bot, event: Event) -> list[str]:
     unimsg: UniMessage[At] = get_current_unimsg(bot, event).get(At)
     return [msg.target for msg in unimsg]
 
 
-@adapter.property_method("image_list")
+@ADAPTER.property_method("image_list")
 async def _(bot: Bot, event: Event) -> list[str]:
     unimsg: UniMessage[Image] = get_current_unimsg(bot, event).get(Image)
     return [url for msg in unimsg if (url := msg.url) is not None]
 
 
-@adapter.property_method("user_id")
+@ADAPTER.property_method("user_id")
 async def _(event: Event) -> str:
     return event.get_user_id()
 
 
-@adapter.property_method("nickname")
+@ADAPTER.property_method("nickname")
 async def _(bot: Bot, event: Event) -> str:
     session = await get_current_session(bot, event)
     return event.get_user_id() if session is None else session.user.nick or session.user.name or session.user.id
 
 
-@adapter.property_method("avatar")
+@ADAPTER.property_method("avatar")
 async def _(bot: Bot, event: Event) -> str:
     session = await get_current_session(bot, event)
     if session and (avatar := session.user.avatar):
@@ -114,13 +114,13 @@ async def _(bot: Bot, event: Event) -> str:
         raise ValueError(f"Can't get avatar from event:{event.get_session_id()}")
 
 
-@adapter.property_method("group_id")
+@ADAPTER.property_method("group_id")
 async def _(bot: Bot, event: Event) -> str | None:
     session = await get_current_session(bot, event)
     return None if session is None else session.scene.id
 
 
-@adapter.property_method("group_avatar")
+@ADAPTER.property_method("group_avatar")
 async def _(bot: Bot, event: Event) -> str | None:
     session = await get_current_session(bot, event)
     if session and (avatar := session.scene.avatar):
@@ -133,7 +133,7 @@ OWNER_CHECK = OWNER()
 ADMIN_CHECK = ADMIN()
 
 
-@adapter.property_method("permission")
+@ADAPTER.property_method("permission")
 async def _(bot: Bot, event: Event) -> PermissionLiteral:
     if await SUPERUSER(bot, event):
         return 3
@@ -171,7 +171,7 @@ def format_member_info(member: Member, group_id: str) -> MemberInfo:
     }
 
 
-@adapter.call_method("group_member_list")
+@ADAPTER.call_method("group_member_list")
 async def _(group_id: str, /, bot: Bot, event: Event) -> list[MemberInfo]:
     interface = get_interface(bot)
     session = await get_current_session(bot, event)
@@ -181,7 +181,7 @@ async def _(group_id: str, /, bot: Bot, event: Event) -> list[MemberInfo]:
     return [format_member_info(member, group_id) for member in member_list]
 
 
-@adapter.call_method("group_member_info")
+@ADAPTER.call_method("group_member_info")
 async def _(group_id: str, user_id: str, /, bot: Bot, event: Event) -> MemberInfo:
     interface = get_interface(bot)
     session = await get_current_session(bot, event)
@@ -191,6 +191,3 @@ async def _(group_id: str, user_id: str, /, bot: Bot, event: Event) -> MemberInf
     if member is None:
         raise ValueError(f"Can't find member:{group_id}-{user_id}")
     return format_member_info(member, group_id)
-
-
-__adapter__ = adapter

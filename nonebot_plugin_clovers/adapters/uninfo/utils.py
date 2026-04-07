@@ -62,6 +62,7 @@ def list2message(message: SequenceMessage) -> UniMessage:
                 unimsg += image2message(seg.data)
             case "at":
                 unimsg = unimsg.at(seg.data)
+                unimsg = unimsg.text(" ")
     return unimsg
 
 
@@ -75,6 +76,12 @@ def to_message(result: Result) -> UniMessage | None:
             return image2message(result.data)
         case "list":
             return list2message(result.data)
+        case "voice":
+            return voice2message(result.data)
+        case "video":
+            return video2message(result.data)
+        case "file":
+            return file2message(result.data)
 
 
 async def send_segmented_result(result: SegmentedMessage, event: Target | Event, bot: Bot):

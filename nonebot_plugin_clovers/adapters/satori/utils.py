@@ -60,6 +60,7 @@ def list2message(message: SequenceMessage):
                 msg += image2message(seg.data)
             case "at":
                 msg += MessageSegment.at(seg.data)
+                msg += MessageSegment.text(" ")
     return msg
 
 
@@ -71,12 +72,12 @@ def to_message(result: Result):
             return result.data
         case "image":
             return image2message(result.data)
+        case "list":
+            return list2message(result.data)
         case "voice":
             return voice2message(result.data)
         case "video":
             return video2message(result.data)
-        case "list":
-            return list2message(result.data)
         case "file":
             return file2message(result.data)
 

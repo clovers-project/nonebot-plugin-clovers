@@ -2,7 +2,7 @@ from io import BytesIO
 from pathlib import Path
 from datetime import datetime
 from clovers_client.result import FileLike
-from nonebot_plugin_clovers import is_local
+from nonebot_plugin_clovers.adapters.utils import format_file, format_filename
 
 
 def format_file_local(file):

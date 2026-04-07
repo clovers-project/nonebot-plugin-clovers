@@ -1,4 +1,4 @@
-from .main import adapter as ADAPTER
+from .main import ADAPTER
 
 
 __all__ = ["ADAPTER"]
