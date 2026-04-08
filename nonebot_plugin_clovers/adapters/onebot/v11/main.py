@@ -1,4 +1,4 @@
-from clovers import Adapter, Result
+from clovers import Adapter
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
 from nonebot.adapters.onebot.v11 import (
