@@ -25,7 +25,7 @@ plugin_config = get_plugin_config(Config).clovers
 clovers_config = plugin_config.sync_config()
 plugins = plugin_config.plugins + clovers_config.plugins
 plugin_dirs = plugin_config.plugin_dirs + clovers_config.plugin_dirs
-using_adapters = clovers_config.adapters or plugin_config.using_adapters
+using_adapters = plugin_config.using_adapters
 priority = plugin_config.priority
 is_local = plugin_config.is_local
 # 创建 NoneBotCloversClient
