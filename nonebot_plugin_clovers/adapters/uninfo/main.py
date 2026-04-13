@@ -5,7 +5,7 @@ from nonebot.permission import SUPERUSER
 from nonebot_plugin_alconna.uniseg import UniMessage, Target, Image, At
 from nonebot_plugin_uninfo import ADMIN, OWNER, get_interface, Member
 from clovers_client.event import MemberInfo, PermissionLiteral
-from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
+from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, PrivateMessage, GroupMessage
 from .utils import (
     image2message,
     voice2message,

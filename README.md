@@ -4,7 +4,7 @@
 
 # nonebot-plugin-clovers
 
-_✨ 官方 Clovers 机器人客户端 ✨_
+_✨ Nonebot 驱动的 Clovers 机器人客户端 ✨_
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 [![pypi](https://img.shields.io/pypi/v/nonebot-plugin-clovers.svg)](https://pypi.python.org/pypi/nonebot-plugin-clovers)

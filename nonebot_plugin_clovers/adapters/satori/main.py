@@ -5,7 +5,7 @@ from nonebot.adapters.satori import Bot, MessageSegment
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.models import Member
 from clovers_client.event import MemberInfo, PermissionLiteral
-from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
+from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, PrivateMessage, GroupMessage
 from .utils import (
     image2message,
     voice2message,

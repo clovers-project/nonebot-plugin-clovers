@@ -10,7 +10,7 @@ from nonebot.adapters.onebot.v11 import (
     GROUP_OWNER,
 )
 from clovers_client.event import MemberInfo, PermissionLiteral, FlatContextUnit
-from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, GroupMessage, PrivateMessage
+from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, PrivateMessage, GroupMessage, MergeForwardMessage
 from nonebot_plugin_clovers.adapters.utils import file2url, format_filename
 from .utils import (
     image2message,
@@ -85,7 +85,7 @@ async def _(message: PrivateMessage, /, bot: Bot):
 
 
 @ADAPTER.send_method("merge_forward")
-def _(message: SequenceMessage, /, bot: Bot, event: MessageEvent):
+def _(message: MergeForwardMessage, /, bot: Bot, event: MessageEvent):
     messages = [
         {"type": "node", "data": {"name": event.self_id, "uin": event.self_id, "content": content}}
         for seg in message
