@@ -1,16 +1,13 @@
-from pydantic import BaseModel
+from clovers_client import Config as CloversConfig
 
 
-class NBPluginConfig(BaseModel):
-    clovers_using_adapters: list[str] = [
-        "nonebot_plugin_clovers.adapters.onebot.v11",
-        "nonebot_plugin_clovers.adapters.qq.group",
-        "nonebot_plugin_clovers.adapters.qq.guild",
-        "nonebot_plugin_clovers.adapters.satori",
-    ]
-    clovers_matcher_priority: int = 100
-
-
-class Config(BaseModel):
+class ScopedConfig(CloversConfig):
+    using_adapters: list[str] = ["~onebot.v11", "~qq.group", "~qq.guild", "~satori", "~uninfo"]
+    priority: int = 100
     plugins: list[str] = []
     plugin_dirs: list[str] = []
+    is_local: bool = True
+
+
+class Config(ScopedConfig):
+    clovers: ScopedConfig = ScopedConfig.sync_config("clovers")
