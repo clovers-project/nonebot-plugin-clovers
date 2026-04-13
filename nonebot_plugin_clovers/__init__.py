@@ -22,7 +22,7 @@ clovers_logger.setLevel(LOG_LEVEL)
 clovers_logger.addHandler(LoguruHandler(LOG_LEVEL))
 # 加载插件配置
 plugin_config = get_plugin_config(Config).clovers
-clovers_config = plugin_config.sync_config()
+clovers_config = plugin_config.sync_config("clovers")
 plugins = plugin_config.plugins + clovers_config.plugins
 plugin_dirs = plugin_config.plugin_dirs + clovers_config.plugin_dirs
 using_adapters = plugin_config.using_adapters

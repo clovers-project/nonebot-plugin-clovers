@@ -3,7 +3,8 @@ from collections import deque
 from nonebot.adapters import Bot, Event
 from nonebot_plugin_alconna.uniseg import UniMessage, Target
 from nonebot_plugin_uninfo import get_session, Session
-from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, Result
+from clovers_client.result import OverallResult, SegmentedResult
+from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage
 from nonebot_plugin_clovers.adapters.utils import format_file, format_filename
 
 
@@ -66,7 +67,7 @@ def list2message(message: SequenceMessage) -> UniMessage:
     return unimsg
 
 
-def to_message(result: Result) -> UniMessage | None:
+def to_message(result: OverallResult) -> UniMessage | None:
     match result.key:
         case "at":
             return UniMessage.at(result.data)
@@ -103,7 +104,7 @@ async def send_segmented_result(result: SegmentedMessage, event: Target | Event,
                 await file2message(seg.data).send(event, bot)
 
 
-async def send_result(target: Target, result: Result, bot: Bot):
+async def send_result(target: Target, result: OverallResult | SegmentedResult, bot: Bot):
     if result.key == "segmented":
         await send_segmented_result(result.data, target, bot)
     elif unimsg := to_message(result):

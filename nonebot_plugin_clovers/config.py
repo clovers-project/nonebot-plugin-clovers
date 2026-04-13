@@ -10,4 +10,4 @@ class ScopedConfig(CloversConfig):
 
 
 class Config(ScopedConfig):
-    clovers: ScopedConfig = ScopedConfig.sync_config()
+    clovers: ScopedConfig = ScopedConfig.sync_config("clovers")

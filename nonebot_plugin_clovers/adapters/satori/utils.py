@@ -1,7 +1,8 @@
 from pathlib import Path
 from collections.abc import Callable, Coroutine
 from nonebot.adapters.satori import Message, MessageSegment
-from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage, Result
+from clovers_client.result import OverallResult, SegmentedResult
+from clovers_client.result import FileLike, SequenceMessage, SegmentedMessage
 from nonebot_plugin_clovers.adapters.utils import format_file, format_filename
 
 
@@ -64,7 +65,7 @@ def list2message(message: SequenceMessage):
     return msg
 
 
-def to_message(result: Result):
+def to_message(result: OverallResult):
     match result.key:
         case "at":
             return MessageSegment.at(result.data)
@@ -91,7 +92,7 @@ async def send_segmented_result(send: Callable[[Sendable], Coroutine], result: S
             await send(msg)
 
 
-async def send_result(send: Callable[[Sendable], Coroutine], result: Result):
+async def send_result(send: Callable[[Sendable], Coroutine], result: OverallResult | SegmentedResult):
     if result.key == "segmented":
         await send_segmented_result(send, result.data)
     elif data := to_message(result):
